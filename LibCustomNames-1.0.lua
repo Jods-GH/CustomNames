@@ -3,52 +3,32 @@ local MINOR_VERSION = 1
 if not LibStub then error(MAJOR_VERSION .. " requires LibStub.") end
 local lib = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not lib then error("LibCustomNames failed to initialise")return end
-local Translit = LibStub("LibTranslit-1.0")
-local translitMark = '!'
+
 LibCustomNamesDB = LibCustomNamesDB or {}
 
-function lib:GetNameForUnit(unit)
-    assert(UnitExists(unit), "LibCustomNames: Can't GetNameForUnit (unit does not exist)")
-    local name = UnitName(unit)
-    return GetCustomName(name)
-end
-function lib:GetCustomName(name) -- returns custom name if exists, otherwise returns original name
+function lib:Get(name) -- returns custom name if exists, otherwise returns original name
     assert(name, "LibCustomNames: Can't GetCustomName (name is nil)")
-	name = Translit:Transliterate(name, translitMark)
 	if LibCustomNamesDB[name] then
 		return LibCustomNamesDB[name], true
 	else
 		return name
 	end
 end
-function lib:CheckCustomName(name)
-    return LibCustomNamesDB[name] and true or nil
+
+function lib:Set(name, customName)
+    assert(name, "LibCustomNames: Can't SetCustomName (name is nil)")
+    if not customName then
+        LibCustomNamesDB[name] = nil
+        return true
+    else
+        LibCustomNamesDB[name] = customName
+        return true
+    end
 end
 
-function lib:AddCustomName(name, customName)
-    assert(name, "LibCustomNames: Can't AddCustomName (name is nil)")
-    assert(customName, "LibCustomNames: Can't AddCustomName (customName is nil)")
-    name = Translit:Transliterate(name, translitMark)
-    LibCustomNamesDB[name] = customName
-    return true
+function lib:GetList()
+    return CopyTable(LibCustomNamesDB)
 end
-
-function lib:RemoveCustomName(name)
-    assert(name, "LibCustomNames: Can't RemoveCustomName (name is nil)")
-    name = Translit:Transliterate(name, translitMark)
-    LibCustomNamesDB[name] = nil
-    return true
-end
-
-function lib:EditCustomName(name, customName)
-    assert(name, "LibCustomNames: Can't EditCustomName (name is nil)")
-    assert(customName, "LibCustomNames: Can't EditCustomName (customName is nil)")
-    assert(CheckCustomName(name), "LibCustomNames: Can't EditCustomName (name does not exist in DB)")
-    name = Translit:Transliterate(name, translitMark)
-    LibCustomNamesDB[name] = customName
-    return true
-end
-
 SLASH_LibCustomNames1 = '/LCN'
 SLASH_LibCustomNames2 = '/lcn'
 SLASH_LibCustomNames3 = '/LibCustomNames'
