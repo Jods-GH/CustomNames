@@ -1,6 +1,6 @@
 # LibCustomNames-1.0
 Adds Management of Custom Names
-##Usage 
+#Usage 
 ```lua
 local LibCustomNames= LibStub("LibCustomNames-1.0")
 local unitName = LibCustomNames:GetNameForUnit(unit)
