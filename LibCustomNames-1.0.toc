@@ -1,6 +1,6 @@
 ## Interface: 100100
 ## Title: Lib: CustomNames
-## Notes: Get custom unit Name or normal unit name
+## Notes: Manages and returns Custom Names
 ## Author: Jods
 ## SavedVariables: LibCustomNamesDB
 ## X-Curse-Project-ID: 867373
