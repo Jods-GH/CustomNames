@@ -1,4 +1,4 @@
-package-as: LibCustomNames-1.0
+package-as: LibCustomNames
 
 externals:
     Libs/LibStub: https://repos.curseforge.com/wow/libstub/trunk
