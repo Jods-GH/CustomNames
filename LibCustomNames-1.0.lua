@@ -17,6 +17,7 @@ end
 
 function lib:Set(name, customName)
     assert(name, "LibCustomNames: Can't SetCustomName (name is nil)")
+    assert(name:match("^([%a]+)-([%a]+)$"), "LibCustomNames: Can't set custom Name (name is not in the correct format Name-Realm)")
     if not customName then
         LibCustomNamesDB[name] = nil
         return true
@@ -36,8 +37,12 @@ SLASH_LibCustomNames3 = '/LibCustomNames'
 SlashCmdList['LibCustomNames'] = function(msg) -- credit to Ironi
     if string.find(string.lower(msg), "add (.-) to (.-)") then --add
 		local _, _, type, from, to = string.find(msg, "(.-) (.*) to (.*)")
-		lib:Set(from, to)
-		print("Added: " .. from .. " -> " .. to);
+        if from:match("^([%a]+)-([%a]+)$") then
+            lib:Set(from, to)
+            print("Added: " .. from .. " -> " .. to);
+        else 
+            print("Name is not in the correct format Name-Realm")
+        end
 	elseif string.find(string.lower(msg), "del (.-)") then --delete
 		local _, _, type, from = string.find(msg, "(.-) (.*)")
 		if LibCustomNamesDB[from] then

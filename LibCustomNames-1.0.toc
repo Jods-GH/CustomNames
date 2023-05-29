@@ -4,6 +4,7 @@
 ## Author: Jods
 ## SavedVariables: LibCustomNamesDB
 ## X-Curse-Project-ID: 867373
+## X-Wago-ID:QKyww7N7
 
 #Libs
 embeds.xml
