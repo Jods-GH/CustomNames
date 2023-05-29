@@ -29,27 +29,28 @@ end
 function lib:GetList()
     return CopyTable(LibCustomNamesDB)
 end
+
 SLASH_LibCustomNames1 = '/LCN'
 SLASH_LibCustomNames2 = '/lcn'
 SLASH_LibCustomNames3 = '/LibCustomNames'
 SlashCmdList['LibCustomNames'] = function(msg) -- credit to Ironi
     if string.find(string.lower(msg), "add (.-) to (.-)") then --add
 		local _, _, type, from, to = string.find(msg, "(.-) (.*) to (.*)")
-		AddCustomName(from,to)
+		lib:Set(from, to)
 		print("Added: " .. from .. " -> " .. to);
 	elseif string.find(string.lower(msg), "del (.-)") then --delete
 		local _, _, type, from = string.find(msg, "(.-) (.*)")
-		if CheckCustomName(from) then
-			local to =  GetCustomName(from)
-			RemoveCustomName(from)
+		if LibCustomNamesDB[from] then
+			local to =  lib:Get(from)
+			lib:Set(from)
 			print("Deleted: " .. from .. " -> " .. to);
         else
             print("No such name in database")
 		end
     elseif string.find(string.lower(msg), "edit (.-)") then --edit
 		local _, _, type, from, to = string.find(msg, "(.-) (.*) to (.*)")
-		if CheckCustomName(from) then
-			EditCustomName(from, to)
+		if LibCustomNamesDB[from] then
+			lib:Set(from, to)
 			print("Edited " .. from .. " -> " .. to);
         else
             print("No such name in database");
