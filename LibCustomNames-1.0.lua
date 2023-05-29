@@ -7,12 +7,12 @@ local Translit = LibStub("LibTranslit-1.0")
 local translitMark = '!'
 LibCustomNamesDB = LibCustomNamesDB or {}
 
-function GetNameForUnit(unit)
+function lib:GetNameForUnit(unit)
     assert(UnitExists(unit), "LibCustomNames: Can't GetNameForUnit (unit does not exist)")
     local name = UnitName(unit)
     return GetCustomName(name)
 end
-function GetCustomName(name) -- returns custom name if exists, otherwise returns original name
+function lib:GetCustomName(name) -- returns custom name if exists, otherwise returns original name
     assert(name, "LibCustomNames: Can't GetCustomName (name is nil)")
 	name = Translit:Transliterate(name, translitMark)
 	if LibCustomNamesDB[name] then
@@ -21,11 +21,11 @@ function GetCustomName(name) -- returns custom name if exists, otherwise returns
 		return name
 	end
 end
-function CheckCustomName(name)
+function lib:CheckCustomName(name)
     return LibCustomNamesDB[name] and true or nil
 end
 
-function AddCustomName(name, customName)
+function lib:AddCustomName(name, customName)
     assert(name, "LibCustomNames: Can't AddCustomName (name is nil)")
     assert(customName, "LibCustomNames: Can't AddCustomName (customName is nil)")
     name = Translit:Transliterate(name, translitMark)
@@ -33,14 +33,14 @@ function AddCustomName(name, customName)
     return true
 end
 
-function RemoveCustomName(name)
+function lib:RemoveCustomName(name)
     assert(name, "LibCustomNames: Can't RemoveCustomName (name is nil)")
     name = Translit:Transliterate(name, translitMark)
     LibCustomNamesDB[name] = nil
     return true
 end
 
-function EditCustomName(name, customName)
+function lib:EditCustomName(name, customName)
     assert(name, "LibCustomNames: Can't EditCustomName (name is nil)")
     assert(customName, "LibCustomNames: Can't EditCustomName (customName is nil)")
     assert(CheckCustomName(name), "LibCustomNames: Can't EditCustomName (name does not exist in DB)")
