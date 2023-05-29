@@ -5,7 +5,7 @@
 ## SavedVariables: LibCustomNamesDB
 ## X-Curse-Project-ID: 867373
 
+#Libs
+embeds.xml
 
-Libs/LibStub
-Libs/LibTranslit-1.0
 LibCustomNames-1.0.lua
