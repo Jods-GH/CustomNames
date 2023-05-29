@@ -1,4 +1,4 @@
-package-as: DungeonAuraTools
+package-as: LibCustomNames-1.0
 
 externals:
     Libs/LibStub: https://repos.curseforge.com/wow/libstub/trunk

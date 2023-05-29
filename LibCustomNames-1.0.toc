@@ -1,10 +1,11 @@
 ## Interface: 100100
-## Title: Lib: CustomNames
+## Title: LibCustomNames-1.0
 ## Notes: Manages and returns Custom Names
 ## Author: Jods
 ## SavedVariables: LibCustomNamesDB
 ## X-Curse-Project-ID: 867373
 ## X-Wago-ID:QKyww7N7
+## X-WoWI-ID:
 
 #Libs
 embeds.xml
