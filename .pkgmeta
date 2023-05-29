@@ -1,0 +1,5 @@
+package-as: DungeonAuraTools
+
+externals:
+    Libs/LibStub: https://repos.curseforge.com/wow/libstub/trunk
+    Libs/LibTranslit-1.0:  https://github.com/Vardex/LibTranslit/releases/latest
