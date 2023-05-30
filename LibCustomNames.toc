@@ -1,5 +1,5 @@
 ## Interface: 100100
-## Title: LibCustomNames-1.0
+## Title: LibCustomNames
 ## Notes: Manages and returns Custom Names
 ## Author: Jods
 ## SavedVariables: LibCustomNamesDB
@@ -10,4 +10,4 @@
 #Libs
 embeds.xml
 
-LibCustomNames-1.0.lua
+LibCustomNames.lua
