@@ -41,8 +41,7 @@ function lib.GetList()
 end
 
 function lib.UnitName(unit)
-	assert(unit, "LibCustomNames: Can't get UnitName (unit is nil)")
-	assert(UnitExists(unit), "LibCustomNames: Can't GetUnitName (unit does not exist)")
+	if not unit or not UnitExists(unit) then return nil,nil end
 	local unitName, unitRealm = UnitName(unit)
 	local nameToCheck = unitName .. "-" .. (unitRealm or GetRealmName())
 	local customName = lib.Get(nameToCheck)
@@ -54,8 +53,7 @@ function lib.UnitName(unit)
 end
 
 function lib.UnitFullName(unit)
-	assert(unit, "LibCustomNames: Can't get UnitFullName (unit is nil)")
-	assert(UnitExists(unit), "LibCustomNames: Can't GetUnitName (unit does not exist)")
+	if not unit or not UnitExists(unit) then return nil,nil end
 	local unitName, unitRealm = UnitFullName(unit)
 	local nameToCheck
 	if UnitIsPlayer(unit) then
@@ -72,8 +70,7 @@ function lib.UnitFullName(unit)
 end
 
 function lib.GetUnitName(unit,showServerName)
-	assert(unit, "LibCustomNames: Can't get GetUnitName (unit is nil)")
-	assert(UnitExists(unit), "LibCustomNames: Can't GetUnitName (unit does not exist)")
+	if not unit or not UnitExists(unit) then return nil,nil end
 	local unitName, unitRealm = UnitFullName(unit)	
 	local nameToCheck
 	if UnitIsPlayer(unit) then
