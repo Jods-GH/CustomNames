@@ -4,11 +4,30 @@ SLASH_LibCustomNames1 = '/LCN'
 SLASH_LibCustomNames2 = '/lcn'
 SLASH_LibCustomNames3 = '/LibCustomNames'
 
+lib:RegisterCallback("Name_Added", function(event, name, customName)
+	print("Added: " .. name .. " is now Renamed to " .. customName)
+end)
+
+lib:RegisterCallback("Name_Removed", function(event, name)
+	print("Deleted: " .. name .. " is no longer Renamed")
+end)
+
+lib:RegisterCallback("Name_Update", function(event, name, customName, oldCustomName)
+	print("Edited: " .. name .. " is now Renamed to " .. customName .. " (was " .. oldCustomName .. ")")
+end)
+
+
+local isNameinDatabase = function(name)
+	if lib.Get(name) ~= name then
+		return true
+	else
+		return false
+	end
+end
 SlashCmdList['LibCustomNames'] = function(msg) -- credit to Ironi
     if string.find(string.lower(msg), "add (.-) to (.-)") then --add
 		local _, _, type, from, to = string.find(msg, "(.-) (.*) to (.*)")
         lib.Set(from, to)
-        print("Added: " .. from .. " -> " .. to);
 	elseif string.find(string.lower(msg), "del (.-)") then --delete
 		local _, _, type, from = string.find(msg, "(.-) (.*)")
 		if UnitExists(from) then	
@@ -17,15 +36,13 @@ SlashCmdList['LibCustomNames'] = function(msg) -- credit to Ironi
 			if UnitIsPlayer(from) then
 				nameToCheck= unitName .. "-" .. (unitRealm or GetRealmName())
 			end
-			if nameToCheck and nameToCheck ~= lib.Get(nameToCheck) then
+			if nameToCheck and isNameinDatabase(nameToCheck) then
 				local to =  lib.Get(nameToCheck)
 				lib.Set(from)
-				print("Deleted: " .. from .. " -> " .. to)
 			end
-		elseif from ~= lib.Get(from) then
+		elseif isNameinDatabase(from) then
 			local to =  lib.Get(from)
 			lib.Set(from)
-			print("Deleted: " .. from .. " -> " .. to)
         else
             print("No such name in database")
 		end
@@ -37,13 +54,11 @@ SlashCmdList['LibCustomNames'] = function(msg) -- credit to Ironi
 			if UnitIsPlayer(from) then
 				nameToCheck= unitName .. "-" .. (unitRealm or GetRealmName())
 			end
-			if nameToCheck and nameToCheck ~= lib.Get(nameToCheck) then
+			if nameToCheck and isNameinDatabase(nameToCheck) then
 				lib.Set(from, to)
-				print("Edited " .. from .. " -> " .. to)
 			end
-		elseif from ~= lib.Get(from) then
+		elseif isNameinDatabase(from) then
 			lib.Set(from, to)
-			print("Edited " .. from .. " -> " .. to)
         else
             print("No such name in database");
 		end
