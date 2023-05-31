@@ -15,7 +15,31 @@ end)
 lib:RegisterCallback("Name_Update", function(event, name, customName, oldCustomName)
 	print("Edited: " .. name .. " is now Renamed to " .. customName .. " (was " .. oldCustomName .. ")")
 end)
-
+--[[
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("BN_FRIEND_ACCOUNT_ONLINE")
+frame:RegisterEvent("BN_FRIEND_INFO_CHANGED")
+frame:SetScript("OnEvent",function(self,...)
+	local event, friendId, isCompanionApp = ...
+	if event == "BN_FRIEND_ACCOUNT_ONLINE" or event == "BN_FRIEND_INFO_CHANGED" then
+		if friendId then
+			local number = C_BattleNet.GetFriendNumGameAccounts(friendId)
+			if number then
+				local bnetAccountInfo = C_BattleNet.GetFriendAccountInfo(friendId)
+				if bnetAccountInfo and bnetAccountInfo.gameAccountInfo and bnetAccountInfo.gameAccountInfo.wowProjectID and bnetAccountInfo.gameAccountInfo.wowProjectID == WOW_PROJECT_MAINLINE then
+					ViragDevTool_AddData( bnetAccountInfo, "bnetAccountInfo")
+					print("Charname "..bnetAccountInfo.gameAccountInfo.characterName)
+					if not bnetAccountInfo.gameAccountInfo.realmName then
+						print("-----------------------------------------------------")
+					end
+					print("RealmName "..bnetAccountInfo.gameAccountInfo.realmName)
+					print("AccountID "..bnetAccountInfo.gameAccountInfo.gameAccountID)
+				end
+			end
+		end
+	end
+end)
+]]
 
 local isNameinDatabase = function(name)
 	if lib.Get(name) ~= name then

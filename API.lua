@@ -6,6 +6,9 @@ lib.callbacks = lib.callbacks or LibStub("CallbackHandler-1.0"):New(lib)
 if not lib then error("LibCustomNames failed to initialise")return end
 
 CustomNamesDB = CustomNamesDB or {}
+CustomNamesDB.CharDB = CustomNamesDB.CharDB or {}
+CustomNamesDB.BnetDB = CustomNamesDB.BnetDB or {}
+CustomNamesDB.BnetDB = CustomNamesDB.BnetDB or {}
 
 function lib.Get(name) -- returns custom name if exists, otherwise returns original name
     assert(name, "LibCustomNames: Can't GetCustomName (name is nil)")
