@@ -25,3 +25,12 @@ LibCustomNames.RegisterCallback(self, "eventName"[, method, [arg]])
 LibCustomNames.UnregisterCallback(self, "eventname")
 LibCustomNames.UnregisterAllCallbacks(self)
 ```
+
+# Example:
+
+```lua
+lib:RegisterCallback("Name_Added", function(event, name, customName)
+	print("Added: " .. name .. " is now Renamed to " .. customName) -- this will print whenever a new Name is added 
+end)
+```
+Check CustomNames.lua for more code examples.
