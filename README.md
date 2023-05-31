@@ -11,3 +11,12 @@ local customName = LibCustomNames.UnitName(unit) -- behaves equivalent to normal
 local customName = LibCustomNames.UnitFullName(unit) -- behaves equivalent to normal UnitFullName()
 local customName = LibCustomNames.GetUnitName(unit,showServerName) -- behaves equivalent to normal GetUnitName()
 ```
+# Callbacks
+
+event names: Name_Removed , Name_Update, Name_Added
+
+```lua
+LibCustomNames.RegisterCallback(self, "eventName"[, method, [arg]])
+LibCustomNames.UnregisterCallback(self, "eventname")
+LibCustomNames.UnregisterAllCallbacks(self)
+```
