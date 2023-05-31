@@ -15,10 +15,11 @@ local customName = LibCustomNames.GetUnitName(unit,showServerName) -- behaves eq
 
 event names: Name_Removed , Name_Update, Name_Added <br/>
 
-Name_Removed (Name) -- will return the name in the database that got removed (This is in format Name-Realm for all player characters and Name for npc's as returned by UnitName()) <br />
-Name_Updated (Name,newName,oldName) -- will return the name in the database (This is in format Name-Realm for all player characters and Name for npc's as returned by UnitName()), the new CustomName the database was updated to and the old CustomName as it was previously returned by the Getter functions <br />
-Name_Added (Name, customName) -- will return the name in the database (This is in format Name-Realm for all player characters and Name for npc's as returned by UnitName()) aswell as the CustomName that was added <br />
+Name_Removed (Name) -- will return the name in the database that got removed  <br />
+Name_Updated (Name, newCustomName, oldCustomName) -- will return the name in the database, the new CustomName the database was updated to and the old CustomName as it was previously returned by the Getter functions <br />
+Name_Added (Name, customName) -- will return the name in the database aswell as the CustomName that was added <br />
 
+Name is always in the format Name-Realm for all player characters and Name for npc's as returned by UnitName()
 ```lua
 LibCustomNames.RegisterCallback(self, "eventName"[, method, [arg]])
 LibCustomNames.UnregisterCallback(self, "eventname")
