@@ -1,4 +1,4 @@
-# LibCustomNames-1.0
+# CustomNames
 Adds Management of Custom Names
 # Usage 
 ```lua
