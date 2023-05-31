@@ -2,19 +2,19 @@ local MAJOR_VERSION = "LibCustomNames"
 local MINOR_VERSION = 3
 if not LibStub then error(MAJOR_VERSION .. " requires LibStub.") end
 local lib = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
+lib.callbacks = lib.callbacks or LibStub("CallbackHandler-1.0"):New(lib)
 if not lib then error("LibCustomNames failed to initialise")return end
 
-LibCustomNamesDB = LibCustomNamesDB or {}
+CustomNamesDB = CustomNamesDB or {}
 
 function lib.Get(name) -- returns custom name if exists, otherwise returns original name
     assert(name, "LibCustomNames: Can't GetCustomName (name is nil)")
-	if LibCustomNamesDB[name] then
-		return LibCustomNamesDB[name]
+	if CustomNamesDB[name] then
+		return CustomNamesDB[name]
 	else
 		return name
 	end
 end
-
 function lib.Set(name, customName)
     assert(name, "LibCustomNames: Can't SetCustomName (name is nil)")
 	if UnitExists(name) then	
@@ -28,16 +28,22 @@ function lib.Set(name, customName)
 		assert(name:match("^(.+)-(.+)$"), "LibCustomNames: Can't set custom Name (name is not in the correct format Name-Realm)")
 	end
 	if not customName then
-		LibCustomNamesDB[name] = nil
+		lib.callbacks:Fire("Name_Removed", name)
+		CustomNamesDB[name] = nil
 		return true
 	else
-		LibCustomNamesDB[name] = customName
+		if CustomNamesDB[name] then
+			lib.callbacks:Fire("Name_Update", name, customName, CustomNamesDB[name])
+		else 
+			lib.callbacks:Fire("Name_Added", name, customName)
+		end
+		CustomNamesDB[name] = customName
 		return true
 	end
 end
 
 function lib.GetList()
-    return CopyTable(LibCustomNamesDB)
+    return CopyTable(CustomNamesDB)
 end
 
 function lib.UnitName(unit)
@@ -110,60 +116,5 @@ function lib.GetUnitName(unit,showServerName)
 				return unitName.." (*)"
 			end
 		end
-	end
-end
-
-SLASH_LibCustomNames1 = '/LCN'
-SLASH_LibCustomNames2 = '/lcn'
-SLASH_LibCustomNames3 = '/LibCustomNames'
-SlashCmdList['LibCustomNames'] = function(msg) -- credit to Ironi
-    if string.find(string.lower(msg), "add (.-) to (.-)") then --add
-		local _, _, type, from, to = string.find(msg, "(.-) (.*) to (.*)")
-        lib.Set(from, to)
-        print("Added: " .. from .. " -> " .. to);
-	elseif string.find(string.lower(msg), "del (.-)") then --delete
-		local _, _, type, from = string.find(msg, "(.-) (.*)")
-		if UnitExists(from) then	
-			local unitName, unitRealm = UnitName(from)
-			local nameToCheck = unitName
-			if UnitIsPlayer(from) then
-				nameToCheck= unitName .. "-" .. (unitRealm or GetRealmName())
-			end
-			if nameToCheck and LibCustomNamesDB[nameToCheck] then
-				local to =  lib.Get(nameToCheck)
-				lib.Set(from)
-				print("Deleted: " .. from .. " -> " .. to)
-			end
-		elseif LibCustomNamesDB[from] then
-			local to =  lib.Get(from)
-			lib.Set(from)
-			print("Deleted: " .. from .. " -> " .. to)
-        else
-            print("No such name in database")
-		end
-    elseif string.find(string.lower(msg), "edit (.-)") then --edit
-		local _, _, type, from, to = string.find(msg, "(.-) (.*) to (.*)")
-		if UnitExists(from) then	
-			local unitName, unitRealm = UnitName(from)
-			local nameToCheck = unitName
-			if UnitIsPlayer(from) then
-				nameToCheck= unitName .. "-" .. (unitRealm or GetRealmName())
-			end
-			if nameToCheck and LibCustomNamesDB[nameToCheck] then
-				lib.Set(from, to)
-				print("Edited " .. from .. " -> " .. to)
-			end
-		elseif LibCustomNamesDB[from] then
-			lib.Set(from, to)
-			print("Edited " .. from .. " -> " .. to)
-        else
-            print("No such name in database");
-		end
-	elseif msg == "list" or msg == "l" then
-		for k,v in pairs(LibCustomNamesDB) do
-			print(k .. " -> " .. v)
-		end
-	else
-		print("LibCustomNames example usage:\rAdding a new name: /lcn add Name to CustomName\rEditing name: /lcn edit Name to CustomName\rDeleting old name: /lcn del Name\rListing every name: /lcn l(ist)")
 	end
 end
