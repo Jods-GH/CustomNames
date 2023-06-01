@@ -74,6 +74,7 @@ local function SetBnet(btag,customName)
 				lib.callbacks:Fire("Name_Update", charname, customName, CustomNamesDB.BnetDB[btag].name)
 			end
 		else 
+			CustomNamesDB.BnetDB[btag] = CustomNamesDB.BnetDB[btag] or {}
 			CustomNamesDB.BnetDB[btag].name = customName
 			for charname in pairs (CustomNamesDB.BnetDB[btag].chars) do			
 				lib.callbacks:Fire("Name_Added", charname, customName)
