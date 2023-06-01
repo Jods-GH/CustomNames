@@ -1,5 +1,5 @@
 local MAJOR_VERSION = "LibCustomNames"
-local MINOR_VERSION = 3
+local MINOR_VERSION = 4
 if not LibStub then error(MAJOR_VERSION .. " requires LibStub.") end
 local lib = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 lib.callbacks = lib.callbacks or LibStub("CallbackHandler-1.0"):New(lib)
@@ -8,14 +8,68 @@ if not lib then error("LibCustomNames failed to initialise")return end
 CustomNamesDB = CustomNamesDB or {}
 CustomNamesDB.CharDB = CustomNamesDB.CharDB or {}
 CustomNamesDB.BnetDB = CustomNamesDB.BnetDB or {}
-CustomNamesDB.BnetDB = CustomNamesDB.BnetDB or {}
+CustomNamesDB.CharToBnetDB = CustomNamesDB.CharToBnetDB or {}
 
 function lib.Get(name) -- returns custom name if exists, otherwise returns original name
-    assert(name, "LibCustomNames: Can't GetCustomName (name is nil)")
-	if CustomNamesDB[name] then
-		return CustomNamesDB[name]
+    assert(name, "LibCustomNames: Can't Get Custom Name (name is nil)")
+	if CustomNamesDB.BnetDB[name] and CustomNamesDB.BnetDB[name].name then
+		return CustomNamesDB.BnetDB[name].name
+	elseif CustomNamesDB.CharToBnetDB[name] and CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]] and CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]].name then
+		return CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]].name
+	elseif CustomNamesDB.CharDB[name] then
+		return CustomNamesDB.CharDB[name]	
 	else
 		return name
+	end
+end
+
+function lib.isCharInBnetDatabase(name)
+	assert(name, "LibCustomNames: Can't check if Name is in BnetDatabase (name is nil)")
+	if CustomNamesDB.CharToBnetDB[name] then
+		return true
+	else
+		return nil
+	end
+end
+
+function  lib.addCharToBtag(charname,btag)
+	assert(charname, "LibCustomNames: Can't addCharToBtag (charname is nil)")
+	assert(btag, "LibCustomNames: Can't addCharToBtag (btag is nil)")
+	CustomNamesDB.CharToBnetDB[charname] = btag	
+	CustomNamesDB.BnetDB[btag] = CustomNamesDB.BnetDB[btag] or {}
+	CustomNamesDB.BnetDB[btag][charname] = true
+	if CustomNamesDB.BnetDB[btag] and CustomNamesDB.BnetDB[btag].name then
+		lib.callbacks:Fire("Name_Added", charname, CustomNamesDB.BnetDB[btag].name)
+	end
+	return true
+end
+
+local function SetBnet(btag,customName)
+	if not customName then
+		for charname in pairs (CustomNamesDB.BnetDB[btag]) do
+			if charname ~= "name" then	
+				lib.callbacks:Fire("Name_Removed", charname)
+			end
+		end
+		lib.callbacks:Fire("Name_Removed", btag)
+		CustomNamesDB.BnetDB[btag].name = nil
+		return true
+	else
+		if CustomNamesDB.BnetDB[btag] and CustomNamesDB.BnetDB[btag].name then
+			for charname in pairs (CustomNamesDB.BnetDB[btag]) do
+				if charname ~= "name" then	
+					lib.callbacks:Fire("Name_Update", charname, customName, CustomNamesDB.BnetDB[btag].name)
+				end
+			end
+		else 
+			for charname in pairs (CustomNamesDB.BnetDB[btag]) do
+				if charname ~= "name" then					
+					lib.callbacks:Fire("Name_Added", charname, customName)
+				end
+			end
+		end
+		CustomNamesDB.BnetDB[btag].name = customName
+		return true
 	end
 end
 function lib.Set(name, customName)
@@ -27,20 +81,22 @@ function lib.Set(name, customName)
 		else
 			name = unitName
 		end
+	elseif name:match("^%a+#%d+$") then
+		return SetBnet(name,customName)
 	else
 		assert(name:match("^(.+)-(.+)$"), "LibCustomNames: Can't set custom Name (name is not in the correct format Name-Realm)")
 	end
 	if not customName then
 		lib.callbacks:Fire("Name_Removed", name)
-		CustomNamesDB[name] = nil
+		CustomNamesDB.CharDB[name] = nil
 		return true
 	else
-		if CustomNamesDB[name] then
-			lib.callbacks:Fire("Name_Update", name, customName, CustomNamesDB[name])
+		if CustomNamesDB.CharDB[name] then
+			lib.callbacks:Fire("Name_Update", name, customName, CustomNamesDB.CharDB[name])
 		else 
 			lib.callbacks:Fire("Name_Added", name, customName)
 		end
-		CustomNamesDB[name] = customName
+		CustomNamesDB.CharDB[name] = customName
 		return true
 	end
 end

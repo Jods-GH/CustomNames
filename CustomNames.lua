@@ -15,7 +15,15 @@ end)
 lib:RegisterCallback("Name_Update", function(event, name, customName, oldCustomName)
 	print("Edited: " .. name .. " is now Renamed to " .. customName .. " (was " .. oldCustomName .. ")")
 end)
---[[
+
+local isNameinDatabase = function(name)
+	if lib.Get(name) ~= name then
+		return true
+	else
+		return nil
+	end
+end
+
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("BN_FRIEND_ACCOUNT_ONLINE")
 frame:RegisterEvent("BN_FRIEND_INFO_CHANGED")
@@ -27,27 +35,24 @@ frame:SetScript("OnEvent",function(self,...)
 			if number then
 				local bnetAccountInfo = C_BattleNet.GetFriendAccountInfo(friendId)
 				if bnetAccountInfo and bnetAccountInfo.gameAccountInfo and bnetAccountInfo.gameAccountInfo.wowProjectID and bnetAccountInfo.gameAccountInfo.wowProjectID == WOW_PROJECT_MAINLINE then
-					ViragDevTool_AddData( bnetAccountInfo, "bnetAccountInfo")
-					print("Charname "..bnetAccountInfo.gameAccountInfo.characterName)
 					if not bnetAccountInfo.gameAccountInfo.realmName then
-						print("-----------------------------------------------------")
+						print("---------------------------------------------")
+						DevTools_Dump(bnetAccountInfo)
+						print("---------------------------------------------")
 					end
-					print("RealmName "..bnetAccountInfo.gameAccountInfo.realmName)
-					print("AccountID "..bnetAccountInfo.gameAccountInfo.gameAccountID)
+					local Character = bnetAccountInfo.gameAccountInfo.characterName.."-"..bnetAccountInfo.gameAccountInfo.realmName
+					print(Character)
+					print(bnetAccountInfo.battleTag)
+					if Character and not  lib.isCharInBnetDatabase(Character) and bnetAccountInfo.battleTag then
+						print("Adding "..Character.." to database")
+						lib.addCharToBtag(Character,bnetAccountInfo.battleTag)
+					end
 				end
 			end
 		end
 	end
 end)
-]]
 
-local isNameinDatabase = function(name)
-	if lib.Get(name) ~= name then
-		return true
-	else
-		return false
-	end
-end
 SlashCmdList['LibCustomNames'] = function(msg) -- credit to Ironi
     if string.find(string.lower(msg), "add (.-) to (.-)") then --add
 		local _, _, type, from, to = string.find(msg, "(.-) (.*) to (.*)")

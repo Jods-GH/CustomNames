@@ -3,13 +3,36 @@ Adds Management of Custom Names
 # Usage 
 ```lua
 local LibCustomNames= LibStub("LibCustomNames")
-local customName = LibCustomNames.Get(name)
-local success = LibCustomNames.Set(name, customName) -- for adding/editing accepts units aswell as Names in the format of Name-Realm (for players) or just Name (for npcs)
-local success = LibCustomNames.Set(name) -- for deleting accepts units aswell as Names in the format of Name-Realm (for players) or just Name (for npcs)
-local NameList = LibCustomNames.GetList() -- returns a copy of the DataBaseTable
+
+-- Setting Names both accept units aswell as Names in the format of Name-Realm (for players) or just Name (for npcs) and Btag in format "BattleTag#12345"
+local success = LibCustomNames.Set(name, customName) -- for adding/editing 
+local success = LibCustomNames.Set(name) -- for deleting 
+-- Getting Names
+local customName = LibCustomNames.Get(name) -- this works both for Get(Charname) and Get(Btag)
 local customName = LibCustomNames.UnitName(unit) -- behaves equivalent to normal UnitName()
 local customName = LibCustomNames.UnitFullName(unit) -- behaves equivalent to normal UnitFullName()
 local customName = LibCustomNames.GetUnitName(unit,showServerName) -- behaves equivalent to normal GetUnitName()
+local NameList = LibCustomNames.GetList() -- returns a copy of the DataBaseTable
+
+-- NameList Format
+NameList = {
+	CharDB = {
+		[Charname] = "CustomName"
+	}
+	BnetDB = {
+		[Btag] = {
+			[name] = "CustomName"
+			[Charname] = true,
+		}
+	}
+	CharToBnetDB = {
+		[Charname] = Btag
+	}
+}
+
+-- Bnet api
+local isInDatabase = LibCustomNames.isCharInBnetDatabase(name) -- returns true if the charname is already linked to a bnet account (nil otherwise)
+local success = lib.addCharToBtag(charname,btag) -- links a char to a Given Btag. Btag should be in format "BattleTag#12345"
 ```
 # Callbacks
 
