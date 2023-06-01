@@ -1,6 +1,5 @@
 local lib = LibStub("CustomNames")
 
-
 lib:RegisterCallback("Name_Added", function(event, name, customName)
 	print("Added: " .. name .. " is now Renamed to " .. customName)
 end)
@@ -47,9 +46,9 @@ SLASH_CustomNames1 = '/CN'
 SLASH_CustomNames2 = '/cn'
 SLASH_CustomNames3 = '/CustomNames'
 SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
-    if string.find(string.lower(msg), "add (.-) to (.-)") then --add
+	if string.find(string.lower(msg), "add (.-) to (.-)") then --add
 		local _, _, type, from, to = string.find(msg, "(.-) (.*) to (.*)")
-        lib.Set(from, to)
+		lib.Set(from, to)
 	elseif string.find(string.lower(msg), "del (.-)") then --delete
 		local _, _, type, from = string.find(msg, "(.-) (.*)")
 		if UnitExists(from) then	
@@ -65,10 +64,10 @@ SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
 		elseif isNameinDatabase(from) then
 			local to =  lib.Get(from)
 			lib.Set(from)
-        else
-            print("No such name in database")
+		else
+			print("No such name in database")
 		end
-    elseif string.find(string.lower(msg), "edit (.-)") then --edit
+	elseif string.find(string.lower(msg), "edit (.-)") then --edit
 		local _, _, type, from, to = string.find(msg, "(.-) (.*) to (.*)")
 		if UnitExists(from) then	
 			local unitName, unitRealm = UnitName(from)
@@ -82,7 +81,7 @@ SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
 		elseif isNameinDatabase(from) then
 			lib.Set(from, to)
 		else
-            print("No such name in database");
+			print("No such name in database");
 		end
 	elseif msg == "list" or msg == "l" then
 		for Db,Dbvalue in pairs(lib.GetList()) do

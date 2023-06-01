@@ -14,7 +14,7 @@ CustomNamesDB.CharToBnetDB = CustomNamesDB.CharToBnetDB or {}
 ---@param name string
 ---@return string name
 function lib.Get(name)
-    assert(name, "CustomNames: Can't Get Custom Name (name is nil)")
+	assert(name, "CustomNames: Can't Get Custom Name (name is nil)")
 	if CustomNamesDB.CharDB[name] then
 		return CustomNamesDB.CharDB[name]	
 	elseif CustomNamesDB.BnetDB[name] and CustomNamesDB.BnetDB[name].name then
@@ -116,7 +116,7 @@ end
 ---Returns a list of all custom names
 ---@return table
 function lib.GetList()
-    return CopyTable(CustomNamesDB)
+	return CopyTable(CustomNamesDB)
 end
 ---behaves equivalent to UnitName(unit)
 ---@param unit UnitToken
