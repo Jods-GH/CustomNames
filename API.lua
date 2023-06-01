@@ -118,7 +118,17 @@ end
 ---Returns a list of all custom names
 ---@return table
 function lib.GetList()
-	return CopyTable(CustomNamesDB)
+	local list = CopyTable(CustomNamesDB.CharDB)
+	for btag,BnetValue in pairs (CustomNamesDB.BnetDB) do
+		if BnetValue.name then
+			for Charname in pairs (BnetValue.chars) do
+				if not list[Charname] and BnetValue.chars[Charname] then
+					list[Charname] = BnetValue.name
+				end
+			end
+		end
+	end
+	return list
 end
 ---behaves equivalent to UnitName(unit)
 ---@param unit UnitToken

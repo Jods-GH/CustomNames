@@ -84,18 +84,8 @@ SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
 			print("No such name in database");
 		end
 	elseif msg == "list" or msg == "l" then
-		for Db,Dbvalue in pairs(lib.GetList()) do
-			if Db == "CharDB" then
-				for k,v in pairs(Dbvalue) do
-					print(k.." -> "..v)
-				end
-			elseif Db == "BnetDB" then
-				for k,v in pairs(Dbvalue) do
-					if v.name then
-						print(k.." -> "..v.name)
-					end
-				end
-			end
+		for k,v in pairs(lib.GetList()) do
+			print(k.." -> "..v)
 			
 		end
 	else
