@@ -34,17 +34,10 @@ frame:SetScript("OnEvent",function(self,...)
 			local number = C_BattleNet.GetFriendNumGameAccounts(friendId)
 			if number then
 				local bnetAccountInfo = C_BattleNet.GetFriendAccountInfo(friendId)
-				if bnetAccountInfo and bnetAccountInfo.gameAccountInfo and bnetAccountInfo.gameAccountInfo.wowProjectID and bnetAccountInfo.gameAccountInfo.wowProjectID == WOW_PROJECT_MAINLINE then
-					if not bnetAccountInfo.gameAccountInfo.realmName then
-						print("---------------------------------------------")
-						DevTools_Dump(bnetAccountInfo)
-						print("---------------------------------------------")
-					end
+				if bnetAccountInfo and bnetAccountInfo.gameAccountInfo and bnetAccountInfo.gameAccountInfo.wowProjectID and bnetAccountInfo.gameAccountInfo.wowProjectID == WOW_PROJECT_MAINLINE 
+				and bnetAccountInfo.gameAccountInfo.characterName and bnetAccountInfo.gameAccountInfo.realmName and bnetAccountInfo.battleTag then
 					local Character = bnetAccountInfo.gameAccountInfo.characterName.."-"..bnetAccountInfo.gameAccountInfo.realmName
-					print(Character)
-					print(bnetAccountInfo.battleTag)
 					if Character and not  lib.isCharInBnetDatabase(Character) and bnetAccountInfo.battleTag then
-						print("Adding "..Character.." to database")
 						lib.addCharToBtag(Character,bnetAccountInfo.battleTag)
 					end
 				end
@@ -92,8 +85,19 @@ SlashCmdList['LibCustomNames'] = function(msg) -- credit to Ironi
             print("No such name in database");
 		end
 	elseif msg == "list" or msg == "l" then
-		for k,v in pairs(lib.GetList()) do
-			print(k .. " -> " .. v)
+		for Db,Dbvalue in pairs(lib.GetList()) do
+			if Db == "CharDB" then
+				for k,v in pairs(Dbvalue) do
+					print(k.." -> "..v)
+				end
+			elseif Db == "BnetDB" then
+				for k,v in pairs(Dbvalue) do
+					if v.name then
+						print(k.." -> "..v.name)
+					end
+				end
+			end
+			
 		end
 	else
 		print("LibCustomNames example usage:\rAdding a new name: /lcn add Name to CustomName\rEditing name: /lcn edit Name to CustomName\rDeleting old name: /lcn del Name\rListing every name: /lcn l(ist)")
