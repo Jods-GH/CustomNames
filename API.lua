@@ -19,7 +19,8 @@ function lib.Get(name)
 		return CustomNamesDB.CharDB[name]	
 	elseif CustomNamesDB.BnetDB[name] and CustomNamesDB.BnetDB[name].name then
 		return CustomNamesDB.BnetDB[name].name
-	elseif CustomNamesDB.CharToBnetDB[name] and CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]] and CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]].name then
+	elseif CustomNamesDB.CharToBnetDB[name] and CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]] and CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]].chars 
+	and CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]].chars[name] and CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]].name then
 		return CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]].name	
 	else
 		return name
@@ -45,13 +46,16 @@ function  lib.AddCharToBtag(charname,btag)
 	assert(btag, "CustomNames: Can't addCharToBtag (btag is nil)")
 	CustomNamesDB.CharToBnetDB[charname] = btag	
 	CustomNamesDB.BnetDB[btag] = CustomNamesDB.BnetDB[btag] or {}
-	CustomNamesDB.BnetDB[btag][charname] = true
+	CustomNamesDB.BnetDB[btag].chars[charname] = true
 	if CustomNamesDB.BnetDB[btag] and CustomNamesDB.BnetDB[btag].name then
 		lib.callbacks:Fire("Name_Added", charname, CustomNamesDB.BnetDB[btag].name)
 	end
 	return true
 end
-
+---lib.set but for btags
+---@param btag string
+---@param customName string
+---@return boolean? success
 local function SetBnet(btag,customName)
 	if not customName then
 		CustomNamesDB.BnetDB[btag].name = nil
@@ -65,16 +69,12 @@ local function SetBnet(btag,customName)
 	else
 		CustomNamesDB.BnetDB[btag].name = customName
 		if CustomNamesDB.BnetDB[btag] and CustomNamesDB.BnetDB[btag].name then
-			for charname in pairs (CustomNamesDB.BnetDB[btag]) do
-				if charname ~= "name" then	
-					lib.callbacks:Fire("Name_Update", charname, customName, CustomNamesDB.BnetDB[btag].name)
-				end
+			for charname in pairs (CustomNamesDB.BnetDB[btag].chars) do
+				lib.callbacks:Fire("Name_Update", charname, customName, CustomNamesDB.BnetDB[btag].name)
 			end
 		else 
-			for charname in pairs (CustomNamesDB.BnetDB[btag]) do
-				if charname ~= "name" then					
-					lib.callbacks:Fire("Name_Added", charname, customName)
-				end
+			for charname in pairs (CustomNamesDB.BnetDB[btag].chars) do			
+				lib.callbacks:Fire("Name_Added", charname, customName)
 			end
 		end
 		return true
