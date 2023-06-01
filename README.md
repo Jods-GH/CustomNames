@@ -12,22 +12,12 @@ local customName = LibCustomNames.Get(name) -- this works both for Get(Charname)
 local customName = LibCustomNames.UnitName(unit) -- behaves equivalent to normal UnitName()
 local customName = LibCustomNames.UnitFullName(unit) -- behaves equivalent to normal UnitFullName()
 local customName = LibCustomNames.GetUnitName(unit,showServerName) -- behaves equivalent to normal GetUnitName()
-local NameList = LibCustomNames.GetList() -- returns a copy of the DataBaseTable
+local NameList = LibCustomNames.GetList() -- returns a list with all Database entrys
 
 -- NameList Format
 NameList = {
-	CharDB = {
-		[Charname] = "CustomName"
-	}
-	BnetDB = {
-		[Btag] = {
-			[name] = "CustomName"
-			[Charname] = true,
-		}
-	}
-	CharToBnetDB = {
-		[Charname] = Btag
-	}
+	["Name-Realm1"] = "CustomName1",
+	["Name-Realm2"] = "CustomName2",
 }
 
 -- Bnet api
