@@ -46,6 +46,7 @@ function  lib.AddCharToBtag(charname,btag)
 	assert(btag, "CustomNames: Can't addCharToBtag (btag is nil)")
 	CustomNamesDB.CharToBnetDB[charname] = btag	
 	CustomNamesDB.BnetDB[btag] = CustomNamesDB.BnetDB[btag] or {}
+	CustomNamesDB.BnetDB[btag].chars = CustomNamesDB.BnetDB[btag].chars or {}
 	CustomNamesDB.BnetDB[btag].chars[charname] = true
 	if CustomNamesDB.BnetDB[btag] and CustomNamesDB.BnetDB[btag].name then
 		lib.callbacks:Fire("Name_Added", charname, CustomNamesDB.BnetDB[btag].name)
@@ -67,12 +68,13 @@ local function SetBnet(btag,customName)
 		lib.callbacks:Fire("Name_Removed", btag)
 		return true
 	else
-		CustomNamesDB.BnetDB[btag].name = customName
 		if CustomNamesDB.BnetDB[btag] and CustomNamesDB.BnetDB[btag].name then
+			CustomNamesDB.BnetDB[btag].name = customName
 			for charname in pairs (CustomNamesDB.BnetDB[btag].chars) do
 				lib.callbacks:Fire("Name_Update", charname, customName, CustomNamesDB.BnetDB[btag].name)
 			end
 		else 
+			CustomNamesDB.BnetDB[btag].name = customName
 			for charname in pairs (CustomNamesDB.BnetDB[btag].chars) do			
 				lib.callbacks:Fire("Name_Added", charname, customName)
 			end
