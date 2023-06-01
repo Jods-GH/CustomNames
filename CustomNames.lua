@@ -1,8 +1,5 @@
-local lib = LibStub("LibCustomNames")
+local lib = LibStub("CustomNames")
 
-SLASH_LibCustomNames1 = '/LCN'
-SLASH_LibCustomNames2 = '/lcn'
-SLASH_LibCustomNames3 = '/LibCustomNames'
 
 lib:RegisterCallback("Name_Added", function(event, name, customName)
 	print("Added: " .. name .. " is now Renamed to " .. customName)
@@ -46,7 +43,10 @@ frame:SetScript("OnEvent",function(self,...)
 	end
 end)
 
-SlashCmdList['LibCustomNames'] = function(msg) -- credit to Ironi
+SLASH_CustomNames1 = '/CN'
+SLASH_CustomNames2 = '/cn'
+SLASH_CustomNames3 = '/CustomNames'
+SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
     if string.find(string.lower(msg), "add (.-) to (.-)") then --add
 		local _, _, type, from, to = string.find(msg, "(.-) (.*) to (.*)")
         lib.Set(from, to)
@@ -81,7 +81,7 @@ SlashCmdList['LibCustomNames'] = function(msg) -- credit to Ironi
 			end
 		elseif isNameinDatabase(from) then
 			lib.Set(from, to)
-        else
+		else
             print("No such name in database");
 		end
 	elseif msg == "list" or msg == "l" then
@@ -100,6 +100,6 @@ SlashCmdList['LibCustomNames'] = function(msg) -- credit to Ironi
 			
 		end
 	else
-		print("LibCustomNames example usage:\rAdding a new name: /lcn add Name to CustomName\rEditing name: /lcn edit Name to CustomName\rDeleting old name: /lcn del Name\rListing every name: /lcn l(ist)")
+		print("CustomNames example usage:\rAdding a new name: /cn add Name to CustomName\rEditing name: /cn edit Name to CustomName\rDeleting old name: /cn del Name\rListing every name: /cn l(ist)")
 	end
 end
