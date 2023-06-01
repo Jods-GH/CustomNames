@@ -37,8 +37,8 @@ frame:SetScript("OnEvent",function(self,...)
 				if bnetAccountInfo and bnetAccountInfo.gameAccountInfo and bnetAccountInfo.gameAccountInfo.wowProjectID and bnetAccountInfo.gameAccountInfo.wowProjectID == WOW_PROJECT_MAINLINE 
 				and bnetAccountInfo.gameAccountInfo.characterName and bnetAccountInfo.gameAccountInfo.realmName and bnetAccountInfo.battleTag then
 					local Character = bnetAccountInfo.gameAccountInfo.characterName.."-"..bnetAccountInfo.gameAccountInfo.realmName
-					if Character and not  lib.isCharInBnetDatabase(Character) and bnetAccountInfo.battleTag then
-						lib.addCharToBtag(Character,bnetAccountInfo.battleTag)
+					if Character and not  lib.IsCharInBnetDatabase(Character) and bnetAccountInfo.battleTag then
+						lib.AddCharToBtag(Character,bnetAccountInfo.battleTag)
 					end
 				end
 			end

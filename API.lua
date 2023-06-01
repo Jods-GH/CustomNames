@@ -23,7 +23,7 @@ function lib.Get(name) -- returns custom name if exists, otherwise returns origi
 	end
 end
 
-function lib.isCharInBnetDatabase(name)
+function lib.IsCharInBnetDatabase(name)
 	assert(name, "LibCustomNames: Can't check if Name is in BnetDatabase (name is nil)")
 	if CustomNamesDB.CharToBnetDB[name] then
 		return true
@@ -32,7 +32,7 @@ function lib.isCharInBnetDatabase(name)
 	end
 end
 
-function  lib.addCharToBtag(charname,btag)
+function  lib.AddCharToBtag(charname,btag)
 	assert(charname, "LibCustomNames: Can't addCharToBtag (charname is nil)")
 	assert(btag, "LibCustomNames: Can't addCharToBtag (btag is nil)")
 	CustomNamesDB.CharToBnetDB[charname] = btag	
