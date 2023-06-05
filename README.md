@@ -2,17 +2,18 @@
 Adds Management of Custom Names
 # Usage 
 ```lua
-local LibCustomNames= LibStub("LibCustomNames")
+local Lib = LibStub("CustomNames")
 
 -- Setting Names both accept units aswell as Names in the format of Name-Realm (for players) or just Name (for npcs) and Btag in format "BattleTag#12345"
-local success = LibCustomNames.Set(name, customName) -- for adding/editing 
-local success = LibCustomNames.Set(name) -- for deleting 
+local success = Lib.Set(name, customName) -- for adding/editing 
+local success = Lib.Set(name) -- for deleting 
 -- Getting Names
-local customName = LibCustomNames.Get(name) -- this works both for Get(Charname) and Get(Btag)
-local customName = LibCustomNames.UnitName(unit) -- behaves equivalent to normal UnitName()
-local customName = LibCustomNames.UnitFullName(unit) -- behaves equivalent to normal UnitFullName()
-local customName = LibCustomNames.GetUnitName(unit,showServerName) -- behaves equivalent to normal GetUnitName()
-local NameList = LibCustomNames.GetList() -- returns a list with all Database entrys
+local customName = Lib.Get(name) -- this works both for Get(Charname) and Get(Btag)
+local customName = Lib.UnitName(unit) -- behaves equivalent to normal UnitName()
+local customName = Lib.UnitFullName(unit) -- behaves equivalent to normal UnitFullName()
+local customName = Lib.UnitNameUnmodified(unit) -- behaves equivalent to normal UnitNameUnmodified()
+local customName = Lib.GetUnitName(unit,showServerName) -- behaves equivalent to normal GetUnitName()
+local NameList = Lib.GetList() -- returns a list with all Database entrys
 
 -- NameList Format
 NameList = {
@@ -21,8 +22,8 @@ NameList = {
 }
 
 -- Bnet api
-local isInDatabase = LibCustomNames.isCharInBnetDatabase(name) -- returns true if the charname is already linked to a bnet account (nil otherwise)
-local success = lib.addCharToBtag(charname,btag) -- links a char to a Given Btag. Btag should be in format "BattleTag#12345"
+local isInDatabase = Lib.isCharInBnetDatabase(name) -- returns true if the charname is already linked to a bnet account (nil otherwise)
+local success = Lib.addCharToBtag(charname,btag) -- links a char to a Given Btag. Btag should be in format "BattleTag#12345"
 ```
 # Callbacks
 
@@ -34,15 +35,15 @@ Name_Added (Name, customName) -- will return the name in the database aswell as 
 
 Name is always in the format Name-Realm for all player characters and Name for npc's as returned by UnitName()
 ```lua
-LibCustomNames.RegisterCallback(self, "eventName"[, method, [arg]])
-LibCustomNames.UnregisterCallback(self, "eventname")
-LibCustomNames.UnregisterAllCallbacks(self)
+Lib.RegisterCallback(self, "eventName"[, method, [arg]])
+Lib.UnregisterCallback(self, "eventname")
+Lib.UnregisterAllCallbacks(self)
 ```
 
 # Example:
 
 ```lua
-lib:RegisterCallback("Name_Added", function(event, name, customName)
+Lib:RegisterCallback("Name_Added", function(event, name, customName)
 	print("Added: " .. name .. " is now Renamed to " .. customName) -- this will print whenever a new Name is added 
 end)
 ```
