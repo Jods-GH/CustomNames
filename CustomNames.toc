@@ -1,5 +1,6 @@
 ## Interface: 100100
 ## Title: CustomNames
+## Version: @project-version@
 ## Notes: Manages and returns Custom Names
 ## Author: Jods
 ## SavedVariables: CustomNamesDB

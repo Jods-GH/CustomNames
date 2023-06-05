@@ -1,22 +1,95 @@
-local MAJOR_VERSION = "LibCustomNames"
-local MINOR_VERSION = 3
+local MAJOR_VERSION = "CustomNames"
+local MINOR_VERSION = 4
 if not LibStub then error(MAJOR_VERSION .. " requires LibStub.") end
 local lib = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 lib.callbacks = lib.callbacks or LibStub("CallbackHandler-1.0"):New(lib)
-if not lib then error("LibCustomNames failed to initialise")return end
+if not lib then error("CustomNames failed to initialise")return end
 
 CustomNamesDB = CustomNamesDB or {}
+CustomNamesDB.CharDB = CustomNamesDB.CharDB or {}
+CustomNamesDB.BnetDB = CustomNamesDB.BnetDB or {}
+CustomNamesDB.CharToBnetDB = CustomNamesDB.CharToBnetDB or {}
 
-function lib.Get(name) -- returns custom name if exists, otherwise returns original name
-    assert(name, "LibCustomNames: Can't GetCustomName (name is nil)")
-	if CustomNamesDB[name] then
-		return CustomNamesDB[name]
+---returns custom name if exists, otherwise returns original name. Expects Name-Realm for Players and Name for NPCs. Also allows for the Lookup of battletags in format "Name#1234"
+---@param name string
+---@return string name
+function lib.Get(name)
+	assert(name, "CustomNames: Can't Get Custom Name (name is nil)")
+	if CustomNamesDB.CharDB[name] then
+		return CustomNamesDB.CharDB[name]	
+	elseif CustomNamesDB.BnetDB[name] and CustomNamesDB.BnetDB[name].name then
+		return CustomNamesDB.BnetDB[name].name
+	elseif CustomNamesDB.CharToBnetDB[name] and CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]] and CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]].chars 
+	and CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]].chars[name] and CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]].name then
+		return CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]].name	
 	else
 		return name
 	end
 end
+---returns true if custom name exists, otherwise returns nil
+---@param name string
+---@return boolean? exists
+function lib.IsCharInBnetDatabase(name)
+	assert(name, "CustomNames: Can't check if Name is in BnetDatabase (name is nil)")
+	if CustomNamesDB.CharToBnetDB[name] then
+		return true
+	else
+		return nil
+	end
+end
+---links a character name to a btag
+---@param charname string
+---@param btag string
+---@return boolean? success
+function  lib.AddCharToBtag(charname,btag)
+	assert(charname, "CustomNames: Can't addCharToBtag (charname is nil)")
+	assert(btag, "CustomNames: Can't addCharToBtag (btag is nil)")
+	CustomNamesDB.CharToBnetDB[charname] = btag	
+	CustomNamesDB.BnetDB[btag] = CustomNamesDB.BnetDB[btag] or {}
+	CustomNamesDB.BnetDB[btag].chars = CustomNamesDB.BnetDB[btag].chars or {}
+	CustomNamesDB.BnetDB[btag].chars[charname] = true
+	if CustomNamesDB.BnetDB[btag] and CustomNamesDB.BnetDB[btag].name then
+		lib.callbacks:Fire("Name_Added", charname, CustomNamesDB.BnetDB[btag].name)
+	end
+	return true
+end
+---lib.set but for btags
+---@param btag string
+---@param customName string
+---@return boolean? success
+local function SetBnet(btag,customName)
+	if not customName then
+		CustomNamesDB.BnetDB[btag].name = nil
+		for charname in pairs (CustomNamesDB.BnetDB[btag]) do
+			if charname ~= "name" then	
+				lib.callbacks:Fire("Name_Removed", charname)
+			end
+		end
+		lib.callbacks:Fire("Name_Removed", btag)
+		return true
+	else
+		if CustomNamesDB.BnetDB[btag] and CustomNamesDB.BnetDB[btag].name then
+			CustomNamesDB.BnetDB[btag].name = customName
+			for charname in pairs (CustomNamesDB.BnetDB[btag].chars) do
+				lib.callbacks:Fire("Name_Update", charname, customName, CustomNamesDB.BnetDB[btag].name)
+			end
+		else 
+			CustomNamesDB.BnetDB[btag] = CustomNamesDB.BnetDB[btag] or {}
+			CustomNamesDB.BnetDB[btag].name = customName
+			for charname in pairs (CustomNamesDB.BnetDB[btag].chars) do			
+				lib.callbacks:Fire("Name_Added", charname, customName)
+			end
+		end
+		return true
+	end
+end
+
+---Setting Names accepts units aswell as Names in the format of Name-Realm (for players) or just Name (for npcs) and Btag in format "BattleTag#12345"
+---@param name any
+---@param customName string
+---@return boolean? success
 function lib.Set(name, customName)
-    assert(name, "LibCustomNames: Can't SetCustomName (name is nil)")
+    assert(name, "CustomNames: Can't SetCustomName (name is nil)")
 	if UnitExists(name) then	
 		local unitName, unitRealm = UnitName(name)
 		if UnitIsPlayer(name) then
@@ -24,28 +97,44 @@ function lib.Set(name, customName)
 		else
 			name = unitName
 		end
+	elseif name:match("^%a+#%d+$") then
+		return SetBnet(name,customName)
 	else
-		assert(name:match("^(.+)-(.+)$"), "LibCustomNames: Can't set custom Name (name is not in the correct format Name-Realm)")
+		assert(name:match("^(.+)-(.+)$"), "CustomNames: Can't set custom Name (name is not in the correct format Name-Realm)")
 	end
 	if not customName then
 		lib.callbacks:Fire("Name_Removed", name)
-		CustomNamesDB[name] = nil
+		CustomNamesDB.CharDB[name] = nil
 		return true
 	else
-		if CustomNamesDB[name] then
-			lib.callbacks:Fire("Name_Update", name, customName, CustomNamesDB[name])
+		if CustomNamesDB.CharDB[name] then
+			lib.callbacks:Fire("Name_Update", name, customName, CustomNamesDB.CharDB[name])
 		else 
 			lib.callbacks:Fire("Name_Added", name, customName)
 		end
-		CustomNamesDB[name] = customName
+		CustomNamesDB.CharDB[name] = customName
 		return true
 	end
 end
-
+---Returns a list of all custom names
+---@return table
 function lib.GetList()
-    return CopyTable(CustomNamesDB)
+	local list = CopyTable(CustomNamesDB.CharDB)
+	for btag,BnetValue in pairs (CustomNamesDB.BnetDB) do
+		if BnetValue.name then
+			for Charname in pairs (BnetValue.chars) do
+				if not list[Charname] and BnetValue.chars[Charname] then
+					list[Charname] = BnetValue.name
+				end
+			end
+		end
+	end
+	return list
 end
-
+---behaves equivalent to UnitName(unit)
+---@param unit UnitToken
+---@return string? name
+---@return string? realm
 function lib.UnitName(unit)
 	if not unit or not UnitExists(unit) then return nil,nil end
 	local unitName, unitRealm = UnitName(unit)
@@ -57,7 +146,25 @@ function lib.UnitName(unit)
 		return unitName,unitRealm
 	end
 end
-
+---behaves equivalent to UnitNameUnmodified(unit)
+---@param unit UnitToken
+---@return string? name
+---@return string? realm
+function lib.UnitNameUnmodified(unit)
+	if not unit or not UnitExists(unit) then return nil,nil end
+	local unitName, unitRealm = UnitNameUnmodified(unit)
+	local nameToCheck = unitName .. "-" .. (unitRealm or GetRealmName())
+	local customName = lib.Get(nameToCheck)
+	if customName ~= nameToCheck then
+		return customName,unitRealm
+	else
+		return unitName,unitRealm
+	end
+end
+---behaves equivalent to UnitFullName(unit)
+---@param unit UnitToken
+---@return string? name
+---@return string? realm
 function lib.UnitFullName(unit)
 	if not unit or not UnitExists(unit) then return nil,nil end
 	local unitName, unitRealm = UnitFullName(unit)
@@ -74,9 +181,12 @@ function lib.UnitFullName(unit)
 		return unitName,unitRealm
 	end
 end
-
+---behaves equivalent to UnitFullName(unit)
+---@param unit UnitToken
+---@param showServerName boolean
+---@return string? name
 function lib.GetUnitName(unit,showServerName)
-	if not unit or not UnitExists(unit) then return nil,nil end
+	if not unit or not UnitExists(unit) then return nil end
 	local unitName, unitRealm = UnitFullName(unit)	
 	local nameToCheck
 	if UnitIsPlayer(unit) then
@@ -84,6 +194,7 @@ function lib.GetUnitName(unit,showServerName)
 	else
 		nameToCheck= unitName
 	end
+	if not nameToCheck then return nil end
 	local customName = lib.Get(nameToCheck)
 	local realmRelationship = UnitRealmRelationship(unit)
 	if realmRelationship == LE_REALM_RELATION_SAME or not realmRelationship then
