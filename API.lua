@@ -146,6 +146,21 @@ function lib.UnitName(unit)
 		return unitName,unitRealm
 	end
 end
+---behaves equivalent to UnitNameUnmodified(unit)
+---@param unit UnitToken
+---@return string? name
+---@return string? realm
+function lib.UnitNameUnmodified(unit)
+	if not unit or not UnitExists(unit) then return nil,nil end
+	local unitName, unitRealm = UnitNameUnmodified(unit)
+	local nameToCheck = unitName .. "-" .. (unitRealm or GetRealmName())
+	local customName = lib.Get(nameToCheck)
+	if customName ~= nameToCheck then
+		return customName,unitRealm
+	else
+		return unitName,unitRealm
+	end
+end
 ---behaves equivalent to UnitFullName(unit)
 ---@param unit UnitToken
 ---@return string? name
