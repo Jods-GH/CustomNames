@@ -55,7 +55,7 @@ SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
 			local unitName, unitRealm = UnitName(from)
 			local nameToCheck = unitName
 			if UnitIsPlayer(from) then
-				nameToCheck= unitName .. "-" .. (unitRealm or GetRealmName())
+				nameToCheck= unitName .. "-" .. (unitRealm or NormalizedRealmName())
 			end
 			if nameToCheck and isNameinDatabase(nameToCheck) then
 				local to =  lib.Get(nameToCheck)
@@ -73,7 +73,7 @@ SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
 			local unitName, unitRealm = UnitName(from)
 			local nameToCheck = unitName
 			if UnitIsPlayer(from) then
-				nameToCheck= unitName .. "-" .. (unitRealm or GetRealmName())
+				nameToCheck= unitName .. "-" .. (unitRealm or NormalizedRealmName())
 			end
 			if nameToCheck and isNameinDatabase(nameToCheck) then
 				lib.Set(from, to)

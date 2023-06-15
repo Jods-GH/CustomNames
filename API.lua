@@ -83,7 +83,11 @@ local function SetBnet(btag,customName)
 		return true
 	end
 end
-
+--- Since GetNormalizedRealmName can return nil we need to gsub GetRealmName ourselfs if need be
+---@return string Realm
+local function NormalizedRealmName()
+	return GetNormalizedRealmName() or GetRealmName():gsub("[%s-]+", "")
+end
 ---Setting Names accepts units aswell as Names in the format of Name-Realm (for players) or just Name (for npcs) and Btag in format "BattleTag#12345"
 ---@param name any
 ---@param customName string
@@ -93,14 +97,14 @@ function lib.Set(name, customName)
 	if UnitExists(name) then	
 		local unitName, unitRealm = UnitName(name)
 		if UnitIsPlayer(name) then
-			name = unitName .. "-" .. (unitRealm or GetRealmName())
+			name = unitName .. "-" .. (unitRealm or NormalizedRealmName())
 		else
 			name = unitName
 		end
 	elseif name:match("^%a+#%d+$") then
 		return SetBnet(name,customName)
 	else
-		assert(name:match("^(.+)-(.+)$"), "CustomNames: Can't set custom Name (name is not in the correct format Name-Realm)")
+		assert(name:match("^(.+)-(.+)$"), "CustomNames: Can't set custom Name (name is not in one of the formats UnitToken, Name-Realm or BattleTag#12345)")
 	end
 	if not customName then
 		lib.callbacks:Fire("Name_Removed", name)
@@ -138,7 +142,7 @@ end
 function lib.UnitName(unit)
 	if not unit or not UnitExists(unit) then return nil,nil end
 	local unitName, unitRealm = UnitName(unit)
-	local nameToCheck = unitName .. "-" .. (unitRealm or GetRealmName())
+	local nameToCheck = unitName .. "-" .. (unitRealm or NormalizedRealmName())
 	local customName = lib.Get(nameToCheck)
 	if customName ~= nameToCheck then
 		return customName,unitRealm
@@ -153,7 +157,7 @@ end
 function lib.UnitNameUnmodified(unit)
 	if not unit or not UnitExists(unit) then return nil,nil end
 	local unitName, unitRealm = UnitNameUnmodified(unit)
-	local nameToCheck = unitName .. "-" .. (unitRealm or GetRealmName())
+	local nameToCheck = unitName .. "-" .. (unitRealm or NormalizedRealmName())
 	local customName = lib.Get(nameToCheck)
 	if customName ~= nameToCheck then
 		return customName,unitRealm
@@ -170,7 +174,7 @@ function lib.UnitFullName(unit)
 	local unitName, unitRealm = UnitFullName(unit)
 	local nameToCheck
 	if UnitIsPlayer(unit) then
-		nameToCheck = unitName .. "-" .. (unitRealm or GetRealmName())
+		nameToCheck = unitName .. "-" .. (unitRealm or NormalizedRealmName())
 	else
 		nameToCheck= unitName
 	end
@@ -190,7 +194,7 @@ function lib.GetUnitName(unit,showServerName)
 	local unitName, unitRealm = UnitFullName(unit)	
 	local nameToCheck
 	if UnitIsPlayer(unit) then
-		nameToCheck = unitName .. "-" .. (unitRealm or GetRealmName())
+		nameToCheck = unitName .. "-" .. (unitRealm or NormalizedRealmName())
 	else
 		nameToCheck= unitName
 	end
