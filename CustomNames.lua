@@ -11,7 +11,9 @@ end)
 lib:RegisterCallback("Name_Update", function(event, name, customName, oldCustomName)
 	print("Edited: " .. name .. " is now Renamed to " .. customName .. " (was " .. oldCustomName .. ")")
 end)
-
+---returns true if the name exists in the database
+---@param name string
+---@return boolean isInDatabase
 local isNameinDatabase = function(name)
 	if lib.Get(name) ~= name then
 		return true
