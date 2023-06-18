@@ -53,7 +53,7 @@ jobs:
         with:
           webhook-url: ${{ secrets.WEBHOOK_URL }}
           embed-title: ${{ env.MESSAGE }}
-          embed-url: https://github.com/Jodsderechte/LibCustomNames-1.0/releases/latest
+          embed-url: https://github.com/Jodsderechte/CustomNames/releases/latest
           embed-description:  ${{ steps.readChanglog.outputs.text }}
       # once cloned, we just run the GitHub Action for the packager project
       - name: Package and release
