@@ -4,24 +4,45 @@ if not LibStub then error(MAJOR_VERSION .. " requires LibStub.") end
 local lib = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 lib.callbacks = lib.callbacks or LibStub("CallbackHandler-1.0"):New(lib)
 if not lib then error("CustomNames failed to initialise")return end
-
 CustomNamesDB = CustomNamesDB or {}
 CustomNamesDB.CharDB = CustomNamesDB.CharDB or {}
 CustomNamesDB.BnetDB = CustomNamesDB.BnetDB or {}
 CustomNamesDB.CharToBnetDB = CustomNamesDB.CharToBnetDB or {}
+local CharDB,BnetDB,CharToBnetDB
+local loadedFrame = CreateFrame("Frame");
+loadedFrame:RegisterEvent("ADDON_LOADED");
+loadedFrame:SetScript("OnEvent", function(self, event, addon)
+  	if(event == "ADDON_LOADED") then
+		if(addon == MAJOR_VERSION) then
+			CharDB = CustomNamesDB.CharDB
+			BnetDB = CustomNamesDB.BnetDB
+			CharToBnetDB = CustomNamesDB.CharToBnetDB
+		end
+	end
+end)
 
+
+--- Since GetNormalizedRealmName can return nil we need to gsub GetRealmName ourselfs if need be
+---@return string Realm
+local function NormalizedRealmName()
+	return GetNormalizedRealmName() or GetRealmName():gsub("[%s-]+", "")
+end
 ---returns custom name if exists, otherwise returns original name. Expects Name-Realm for Players and Name for NPCs. Also allows for the Lookup of battletags in format "Name#1234"
 ---@param name string
 ---@return string name
 function lib.Get(name)
 	assert(name, "CustomNames: Can't Get Custom Name (name is nil)")
-	if CustomNamesDB.CharDB[name] then
-		return CustomNamesDB.CharDB[name]	
-	elseif CustomNamesDB.BnetDB[name] and CustomNamesDB.BnetDB[name].name then
-		return CustomNamesDB.BnetDB[name].name
-	elseif CustomNamesDB.CharToBnetDB[name] and CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]] and CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]].chars 
-	and CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]].chars[name] and CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]].name then
-		return CustomNamesDB.BnetDB[CustomNamesDB.CharToBnetDB[name]].name	
+	local nameToCheck = name
+	if not (name:match( "^.-%-.-$") or name:match("^%a+#%d+$")) then -- add realm if it isn't in btag format and doesn't exist
+		nameToCheck = name .. "-" .. NormalizedRealmName()
+	end
+	if CharDB[nameToCheck] then
+		return CharDB[nameToCheck]	
+	elseif BnetDB[nameToCheck] and BnetDB[nameToCheck].name then
+		return BnetDB[nameToCheck].name
+	elseif CharToBnetDB[nameToCheck] and BnetDB[CharToBnetDB[nameToCheck]] and BnetDB[CharToBnetDB[nameToCheck]].chars 
+	and BnetDB[CharToBnetDB[nameToCheck]].chars[nameToCheck] and BnetDB[CharToBnetDB[nameToCheck]].name then
+		return BnetDB[CharToBnetDB[nameToCheck]].name	
 	else
 		return name
 	end
@@ -31,7 +52,7 @@ end
 ---@return boolean? exists
 function lib.IsCharInBnetDatabase(name)
 	assert(name, "CustomNames: Can't check if Name is in BnetDatabase (name is nil)")
-	if CustomNamesDB.CharToBnetDB[name] then
+	if CharToBnetDB[name] then
 		return true
 	else
 		return nil
@@ -44,12 +65,12 @@ end
 function  lib.AddCharToBtag(charname,btag)
 	assert(charname, "CustomNames: Can't addCharToBtag (charname is nil)")
 	assert(btag, "CustomNames: Can't addCharToBtag (btag is nil)")
-	CustomNamesDB.CharToBnetDB[charname] = btag	
-	CustomNamesDB.BnetDB[btag] = CustomNamesDB.BnetDB[btag] or {}
-	CustomNamesDB.BnetDB[btag].chars = CustomNamesDB.BnetDB[btag].chars or {}
-	CustomNamesDB.BnetDB[btag].chars[charname] = true
-	if CustomNamesDB.BnetDB[btag] and CustomNamesDB.BnetDB[btag].name then
-		lib.callbacks:Fire("Name_Added", charname, CustomNamesDB.BnetDB[btag].name)
+	CharToBnetDB[charname] = btag	
+	BnetDB[btag] = BnetDB[btag] or {}
+	BnetDB[btag].chars = BnetDB[btag].chars or {}
+	BnetDB[btag].chars[charname] = true
+	if BnetDB[btag] and BnetDB[btag].name then
+		lib.callbacks:Fire("Name_Added", charname, BnetDB[btag].name)
 	end
 	return true
 end
@@ -59,8 +80,8 @@ end
 ---@return boolean? success
 local function SetBnet(btag,customName)
 	if not customName then
-		CustomNamesDB.BnetDB[btag].name = nil
-		for charname in pairs (CustomNamesDB.BnetDB[btag]) do
+		BnetDB[btag].name = nil
+		for charname in pairs (BnetDB[btag]) do
 			if charname ~= "name" then	
 				lib.callbacks:Fire("Name_Removed", charname)
 			end
@@ -68,25 +89,20 @@ local function SetBnet(btag,customName)
 		lib.callbacks:Fire("Name_Removed", btag)
 		return true
 	else
-		if CustomNamesDB.BnetDB[btag] and CustomNamesDB.BnetDB[btag].name then
-			CustomNamesDB.BnetDB[btag].name = customName
-			for charname in pairs (CustomNamesDB.BnetDB[btag].chars) do
-				lib.callbacks:Fire("Name_Update", charname, customName, CustomNamesDB.BnetDB[btag].name)
+		if BnetDB[btag] and BnetDB[btag].name then
+			BnetDB[btag].name = customName
+			for charname in pairs (BnetDB[btag].chars) do
+				lib.callbacks:Fire("Name_Update", charname, customName, BnetDB[btag].name)
 			end
 		else 
-			CustomNamesDB.BnetDB[btag] = CustomNamesDB.BnetDB[btag] or {}
-			CustomNamesDB.BnetDB[btag].name = customName
-			for charname in pairs (CustomNamesDB.BnetDB[btag].chars) do			
+			BnetDB[btag] = BnetDB[btag] or {}
+			BnetDB[btag].name = customName
+			for charname in pairs (BnetDB[btag].chars) do			
 				lib.callbacks:Fire("Name_Added", charname, customName)
 			end
 		end
 		return true
 	end
-end
---- Since GetNormalizedRealmName can return nil we need to gsub GetRealmName ourselfs if need be
----@return string Realm
-local function NormalizedRealmName()
-	return GetNormalizedRealmName() or GetRealmName():gsub("[%s-]+", "")
 end
 ---Setting Names accepts units aswell as Names in the format of Name-Realm (for players) or just Name (for npcs) and Btag in format "BattleTag#12345"
 ---@param name any
@@ -107,24 +123,25 @@ function lib.Set(name, customName)
 		assert(name:match("^(.+)-(.+)$"), "CustomNames: Can't set custom Name (name is not in one of the formats UnitToken, Name-Realm or BattleTag#12345)")
 	end
 	if not customName then
+		CharDB[name] = nil
 		lib.callbacks:Fire("Name_Removed", name)
-		CustomNamesDB.CharDB[name] = nil
 		return true
 	else
-		if CustomNamesDB.CharDB[name] then
-			lib.callbacks:Fire("Name_Update", name, customName, CustomNamesDB.CharDB[name])
+		if CharDB[name] then
+			CharDB[name] = customName
+			lib.callbacks:Fire("Name_Update", name, customName, CharDB[name])
 		else 
+			CharDB[name] = customName
 			lib.callbacks:Fire("Name_Added", name, customName)
 		end
-		CustomNamesDB.CharDB[name] = customName
 		return true
 	end
 end
 ---Returns a list of all custom names
 ---@return table
 function lib.GetList()
-	local list = CopyTable(CustomNamesDB.CharDB)
-	for btag,BnetValue in pairs (CustomNamesDB.BnetDB) do
+	local list = CopyTable(CharDB)
+	for btag,BnetValue in pairs (BnetDB) do
 		if BnetValue.name then
 			for Charname in pairs (BnetValue.chars) do
 				if not list[Charname] and BnetValue.chars[Charname] then
