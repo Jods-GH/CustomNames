@@ -44,6 +44,12 @@ frame:SetScript("OnEvent",function(self,...)
 	end
 end)
 
+--- Since GetNormalizedRealmName can return nil we need to gsub GetRealmName ourselfs if need be
+---@return string Realm
+local function NormalizedRealmName()
+	return GetNormalizedRealmName() or GetRealmName():gsub("[%s-]+", "")
+end
+
 SLASH_CustomNames1 = '/CN'
 SLASH_CustomNames2 = '/cn'
 SLASH_CustomNames3 = '/CustomNames'
