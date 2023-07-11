@@ -1,4 +1,4 @@
-## Interface: 100100
+## Interface: 100105
 ## Title: CustomNames
 ## Version: @project-version@
 ## Notes: Manages and returns Custom Names
