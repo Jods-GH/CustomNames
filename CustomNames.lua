@@ -44,6 +44,9 @@ frame:SetScript("OnEvent",function(self,...)
 	end
 end)
 
+
+
+
 --- Since GetNormalizedRealmName can return nil we need to gsub GetRealmName ourselfs if need be
 ---@return string Realm
 local function NormalizedRealmName()
