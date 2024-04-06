@@ -90,9 +90,10 @@ local function SetBnet(btag,customName)
 		return true
 	else
 		if BnetDB[btag] and BnetDB[btag].name then
+			local tempname = BnetDB[btag].name
 			BnetDB[btag].name = customName
 			for charname in pairs (BnetDB[btag].chars) do
-				lib.callbacks:Fire("Name_Update", charname, customName, BnetDB[btag].name)
+				lib.callbacks:Fire("Name_Update", charname, customName, tempname)
 			end
 		else 
 			BnetDB[btag] = BnetDB[btag] or {}
@@ -128,8 +129,9 @@ function lib.Set(name, customName)
 		return true
 	else
 		if CharDB[name] then
+			local tempname = CharDB[name]
 			CharDB[name] = customName
-			lib.callbacks:Fire("Name_Update", name, customName, CharDB[name])
+			lib.callbacks:Fire("Name_Update", name, customName, tempname)
 		else 
 			CharDB[name] = customName
 			lib.callbacks:Fire("Name_Added", name, customName)
