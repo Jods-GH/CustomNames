@@ -56,7 +56,7 @@ Check CustomNames.lua for more code examples.
 [//]: # (Links)
 
 [Discord]: https://discord.com/invite/v3gYmYamGJ (Join the Discord)
-[PayPal]: https://www.paypal.com/donate/?hosted_button_id=PSQ4D3HXNZKMG (Donate via PayPal)
+[PayPal]: https://ko-fi.com/jodsderechte (Donate via PayPal)
 [Release]: https://github.com/Jodsderechte/CustomNames/releases/latest (Latest release)
 
 [//]: # (Images)
