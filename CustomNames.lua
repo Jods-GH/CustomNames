@@ -25,6 +25,7 @@ end
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("BN_FRIEND_ACCOUNT_ONLINE")
 frame:RegisterEvent("BN_FRIEND_INFO_CHANGED")
+frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:SetScript("OnEvent",function(self,...)
 	local event, friendId, isCompanionApp = ...
 	if event == "BN_FRIEND_ACCOUNT_ONLINE" or event == "BN_FRIEND_INFO_CHANGED" then
@@ -40,6 +41,12 @@ frame:SetScript("OnEvent",function(self,...)
 					end
 				end
 			end
+		end
+	elseif event == "PLAYER_ENTERING_WORLD" then
+		local name,realm = UnitFullName("player")
+		local fullName = name.."-"..realm
+		if not lib.IsCharInBnetDatabase(fullName) then
+			lib.AddCharToBtag(fullName, "self")
 		end
 	end
 end)

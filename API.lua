@@ -120,6 +120,8 @@ function lib.Set(name, customName)
 		end
 	elseif name:match("^(.-)#(%d+)$") then
 		return SetBnet(name,customName)
+	elseif name:lower():trim():match("self") then
+		return SetBnet("self",customName)
 	else
 		assert(name:match("^(.+)-(.+)$"), "CustomNames: Can't set custom Name (name is not in one of the formats UnitToken, Name-Realm or BattleTag#12345)")
 	end
