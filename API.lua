@@ -1,6 +1,7 @@
 local MAJOR_VERSION = "CustomNames"
 local MINOR_VERSION = 4
 if not LibStub then error(MAJOR_VERSION .. " requires LibStub.") end
+---@class CustomNames
 local lib = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 lib.callbacks = lib.callbacks or LibStub("CallbackHandler-1.0"):New(lib)
 if not lib then error("CustomNames failed to initialise")return end
@@ -50,14 +51,24 @@ end
 ---returns true if custom name exists, otherwise returns nil
 ---@param name string
 ---@return boolean? exists
+---@deprecated
 function lib.IsCharInBnetDatabase(name)
+	return lib.IsInBnetDatabase(name)
+end
+---returns true if custom name exists for char or btag, otherwise returns nil
+---@param name string
+---@return boolean? exists
+function lib.IsInBnetDatabase(name)
 	assert(name, "CustomNames: Can't check if Name is in BnetDatabase (name is nil)")
 	if CharToBnetDB[name] then
+		return true
+	elseif BnetDB[name] then
 		return true
 	else
 		return nil
 	end
 end
+
 ---links a character name to a btag
 ---@param charname string
 ---@param btag string

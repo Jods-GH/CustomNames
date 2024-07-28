@@ -82,6 +82,8 @@ SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
 		elseif isNameinDatabase(from) then
 			local to =  lib.Get(from)
 			lib.Set(from)
+		elseif lib.IsInBnetDatabase(from) then
+			lib.Set(from)
 		else
 			print("No such name in database")
 		end
@@ -97,6 +99,8 @@ SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
 				lib.Set(from, to)
 			end
 		elseif isNameinDatabase(from) then
+			lib.Set(from, to)
+		elseif lib.IsInBnetDatabase(from) then
 			lib.Set(from, to)
 		else
 			print("No such name in database");
