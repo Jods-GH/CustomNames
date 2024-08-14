@@ -57,7 +57,7 @@ function lib.IsCharInBnetDatabase(name)
 end
 ---returns true if custom name exists for char or btag, otherwise returns nil
 ---@param name string
----@return boolean? exists
+---@return boolean exists
 function lib.IsInBnetDatabase(name)
 	assert(name, "CustomNames: Can't check if Name is in BnetDatabase (name is nil)")
 	if CharToBnetDB[name] then
@@ -65,7 +65,7 @@ function lib.IsInBnetDatabase(name)
 	elseif BnetDB[name] then
 		return true
 	else
-		return nil
+		return false
 	end
 end
 
@@ -172,7 +172,7 @@ end
 ---@return string? name
 ---@return string? realm
 function lib.UnitName(unit)
-	if not unit or not UnitExists(unit) then return nil,nil end
+	if not unit or not UnitExists(unit) then return UnitName(unit) end
 	local unitName, unitRealm = UnitName(unit)
 	local nameToCheck = unitName .. "-" .. (unitRealm or NormalizedRealmName())
 	local customName = lib.Get(nameToCheck)
@@ -187,7 +187,7 @@ end
 ---@return string? name
 ---@return string? realm
 function lib.UnitNameUnmodified(unit)
-	if not unit or not UnitExists(unit) then return nil,nil end
+	if not unit or not UnitExists(unit) then return UnitNameUnmodified(unit) end
 	local unitName, unitRealm = UnitNameUnmodified(unit)
 	local nameToCheck = unitName .. "-" .. (unitRealm or NormalizedRealmName())
 	local customName = lib.Get(nameToCheck)
@@ -202,7 +202,7 @@ end
 ---@return string? name
 ---@return string? realm
 function lib.UnitFullName(unit)
-	if not unit or not UnitExists(unit) then return nil,nil end
+	if not unit or not UnitExists(unit) then return UnitFullName(unit) end
 	local unitName, unitRealm = UnitFullName(unit)
 	local nameToCheck
 	if UnitIsPlayer(unit) then
@@ -222,7 +222,7 @@ end
 ---@param showServerName boolean
 ---@return string? name
 function lib.GetUnitName(unit,showServerName)
-	if not unit or not UnitExists(unit) then return nil end
+	if not unit or not UnitExists(unit) then return GetUnitName(unit, showServerName) end
 	local unitName, unitRealm = UnitFullName(unit)	
 	local nameToCheck
 	if UnitIsPlayer(unit) then
@@ -230,7 +230,9 @@ function lib.GetUnitName(unit,showServerName)
 	else
 		nameToCheck= unitName
 	end
-	if not nameToCheck then return nil end
+	if not nameToCheck then 
+		return GetUnitName(unit, showServerName)
+	end
 	local customName = lib.Get(nameToCheck)
 	local realmRelationship = UnitRealmRelationship(unit)
 	if realmRelationship == LE_REALM_RELATION_SAME or not realmRelationship then
