@@ -90,6 +90,7 @@ end
 ---@param customName string
 ---@return boolean? success
 local function SetBnet(btag,customName)
+	if not btag then return end
 	if not customName then
 		BnetDB[btag].name = nil
 		for charname in pairs (BnetDB[btag]) do
@@ -103,14 +104,18 @@ local function SetBnet(btag,customName)
 		if BnetDB[btag] and BnetDB[btag].name then
 			local tempname = BnetDB[btag].name
 			BnetDB[btag].name = customName
-			for charname in pairs (BnetDB[btag].chars) do
-				lib.callbacks:Fire("Name_Update", charname, customName, tempname)
+			if BnetDB[btag].chars then
+				for charname in pairs (BnetDB[btag].chars) do
+					lib.callbacks:Fire("Name_Update", charname, customName, tempname)
+				end
 			end
 		else 
 			BnetDB[btag] = BnetDB[btag] or {}
 			BnetDB[btag].name = customName
-			for charname in pairs (BnetDB[btag].chars) do			
-				lib.callbacks:Fire("Name_Added", charname, customName)
+			if BnetDB[btag].chars then
+				for charname in pairs (BnetDB[btag].chars) do			
+					lib.callbacks:Fire("Name_Added", charname, customName)
+				end
 			end
 		end
 		return true
@@ -157,7 +162,7 @@ end
 function lib.GetList()
 	local list = CopyTable(CharDB)
 	for btag,BnetValue in pairs (BnetDB) do
-		if BnetValue.name then
+		if BnetValue.name and BnetValue.chars then
 			for Charname in pairs (BnetValue.chars) do
 				if not list[Charname] and BnetValue.chars[Charname] then
 					list[Charname] = BnetValue.name
