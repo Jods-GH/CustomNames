@@ -25,7 +25,10 @@ NameList = {
 }
 
 -- Bnet api
-local isInDatabase = Lib.isCharInBnetDatabase(name) -- returns true if the charname is already linked to a bnet account (nil otherwise)
+local isInDatabase = Lib.isCharInBnetDatabase(name) -- returns true if the charname is already linked to a bnet account (false otherwise)
+local isInDatabase = Lib.isCharInDatabase(name) --returns true if custom name exists for char either through btag or direct otherwise false
+local isInDatabase = Lib.isInDatabase(name) --returns true if exists, otherwise returns false. Expects Name-Realm for Players and Name for NPCs. Also allows for the Lookup of battletags in format "Name#1234"
+
 local success = Lib.addCharToBtag(charname,btag) -- links a char to a Given Btag. Btag should be in format "BattleTag#12345"
 ```
 # Callbacks
