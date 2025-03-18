@@ -55,7 +55,7 @@ end
 function lib.IsCharInBnetDatabase(name)
 	return lib.IsInBnetDatabase(name)
 end
----returns true if custom name exists for char or btag, otherwise returns nil
+---returns true if custom name exists for char or btag, otherwise returns false
 ---@param name string
 ---@return boolean exists
 function lib.IsInBnetDatabase(name)
@@ -64,6 +64,37 @@ function lib.IsInBnetDatabase(name)
 		return true
 	elseif BnetDB[name] then
 		return true
+	else
+		return false
+	end
+end
+
+---returns true if custom name exists for char either through btag or direct otherwise false
+---@param name string
+---@return boolean exists
+function lib.isCharInDatabase(name)
+	assert(name, "CustomNames: Can't Get Custom Name (name is nil)")
+	local isInCharDb = CharDB[name] and true or false
+	local isInBnetDb = CharToBnetDB[name] and true or false
+	return isInCharDb or isInBnetDb
+end
+
+---returns true if exists, otherwise returns false. Expects Name-Realm for Players and Name for NPCs. Also allows for the Lookup of battletags in format "Name#1234"
+---@param name string
+---@return boolean exists
+function lib.isInDatabase(name)
+	assert(name, "CustomNames: Can't Get Custom Name (name is nil)")
+	local nameToCheck = name
+	if not (name:match( "^.-%-.-$") or name:match("^%a+#%d+$")) then -- add realm if it isn't in btag format and doesn't exist
+		nameToCheck = name .. "-" .. NormalizedRealmName()
+	end
+	if CharDB[nameToCheck] then
+		return true	
+	elseif BnetDB[nameToCheck] and BnetDB[nameToCheck].name then
+		return true
+	elseif CharToBnetDB[nameToCheck] and BnetDB[CharToBnetDB[nameToCheck]] and BnetDB[CharToBnetDB[nameToCheck]].chars 
+	and BnetDB[CharToBnetDB[nameToCheck]].chars[nameToCheck] and BnetDB[CharToBnetDB[nameToCheck]].name then
+		return true	
 	else
 		return false
 	end

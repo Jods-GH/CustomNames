@@ -11,16 +11,6 @@ end)
 lib:RegisterCallback("Name_Update", function(event, name, customName, oldCustomName)
 	print("Edited: " .. name .. " is now Renamed to " .. customName .. " (was " .. oldCustomName .. ")")
 end)
----returns true if the name exists in the database
----@param name string
----@return boolean isInDatabase
-local isNameinDatabase = function(name)
-	if lib.Get(name) ~= name then
-		return true
-	else
-		return nil
-	end
-end
 
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("BN_FRIEND_ACCOUNT_ONLINE")
@@ -75,11 +65,11 @@ SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
 			if UnitIsPlayer(from) then
 				nameToCheck= unitName .. "-" .. (unitRealm or NormalizedRealmName())
 			end
-			if nameToCheck and isNameinDatabase(nameToCheck) then
+			if nameToCheck and lib.isCharInDatabase(nameToCheck) then
 				local to =  lib.Get(nameToCheck)
 				lib.Set(from)
 			end
-		elseif isNameinDatabase(from) then
+		elseif lib.isCharInDatabase(from) then
 			local to =  lib.Get(from)
 			lib.Set(from)
 		elseif lib.IsInBnetDatabase(from) then
@@ -95,10 +85,10 @@ SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
 			if UnitIsPlayer(from) then
 				nameToCheck= unitName .. "-" .. (unitRealm or NormalizedRealmName())
 			end
-			if nameToCheck and isNameinDatabase(nameToCheck) then
+			if nameToCheck and lib.isCharInDatabase(nameToCheck) then
 				lib.Set(from, to)
 			end
-		elseif isNameinDatabase(from) then
+		elseif lib.isCharInDatabase(from) then
 			lib.Set(from, to)
 		elseif lib.IsInBnetDatabase(from) then
 			lib.Set(from, to)
