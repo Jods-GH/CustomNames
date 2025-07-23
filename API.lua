@@ -100,6 +100,45 @@ function lib.isInDatabase(name)
 	end
 end
 
+---returns true if name is a "battletag" includes self so can't be used to check if a name is in the database
+---@param name any
+---@return boolean
+local function isBtag(name)
+	if not name then return false end
+	return name:match("^%a+#%d+$") or name:match("^self$") -- self is a special case for the current player
+end
+
+---returns all characters linked to a given btag
+---@param btag string
+--- @return table list -- of characters in fullname format Name-Realm
+local function GetCharactersInBtag(btag)
+	assert(btag, "CustomNames: Can't Get Characters in Btag (btag is nil)")
+	if not BnetDB[btag] or not BnetDB[btag].chars then
+		return {}
+	end
+	local chars = {}
+	for charname in pairs (BnetDB[btag].chars) do
+		chars[charname] = lib.Get(charname)
+	end
+	return chars
+end
+
+--- returns all characters linked to a given character or btag
+--- @param name any -- needs to be character name in format Name-Realm or battletag in format "Name#1234"
+--- @return table -- list of characters in fullname format Name-Realm
+function lib.GetLinkedCharacters(name)
+	assert(name, "CustomNames: Can't Get Linked Characters (name is nil)")
+	if isBtag(name) then
+		return GetCharactersInBtag(name)
+	end
+	local btag = CharToBnetDB[name]
+	if not btag then
+		return {}
+	end
+	return GetCharactersInBtag(btag)
+end
+
+
 ---links a character name to a btag
 ---@param charname string
 ---@param btag string

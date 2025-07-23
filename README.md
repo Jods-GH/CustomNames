@@ -17,6 +17,7 @@ local customName = Lib.UnitFullName(unit) -- behaves equivalent to normal UnitFu
 local customName = Lib.UnitNameUnmodified(unit) -- behaves equivalent to normal UnitNameUnmodified()
 local customName = Lib.GetUnitName(unit,showServerName) -- behaves equivalent to normal GetUnitName()
 local NameList = Lib.GetList() -- returns a list with all Database entrys
+local NameList = Lib.GetLinkedCharacters(name) --- returns all characters linked to a given character or btag
 
 -- NameList Format
 NameList = {
