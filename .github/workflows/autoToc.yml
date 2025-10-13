@@ -20,6 +20,6 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           title: Update Interface version
-          commit-message: chore: Update toc to newest wow interface version
+          commit-message: 'chore: Update toc to newest wow interface version'
           branch: interface-version
           delete-branch: true
