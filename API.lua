@@ -32,6 +32,12 @@ end
 ---@param name string
 ---@return string name
 function lib.Get(name)
+	if issecretvalue then
+		assert(not issecretvalue(name), "CustomNames: Can't get name (name is a secret value)")
+	end
+	if canaccessvalue then
+		assert(canaccessvalue(name), "CustomNames: Can't get name (no access to value)")
+	end
 	assert(name, "CustomNames: Can't Get Custom Name (name is nil)")
 	local nameToCheck = name
 	if not (name:match( "^.-%-.-$") or name:match("^%a+#%d+$")) then -- add realm if it isn't in btag format and doesn't exist
@@ -59,6 +65,12 @@ end
 ---@param name string
 ---@return boolean exists
 function lib.IsInBnetDatabase(name)
+	if issecretvalue then
+		assert(not issecretvalue(name), "CustomNames: Can't check if Name is in BnetDatabase (name is a secret value)")
+	end
+	if canaccessvalue then
+		assert(canaccessvalue(name), "CustomNames: Can't check if Name is in BnetDatabase (no access to value)")
+	end
 	assert(name, "CustomNames: Can't check if Name is in BnetDatabase (name is nil)")
 	if CharToBnetDB[name] then
 		return true
@@ -73,6 +85,12 @@ end
 ---@param name string
 ---@return boolean exists
 function lib.isCharInDatabase(name)
+	if issecretvalue then
+		assert(not issecretvalue(name), "CustomNames: Can't check if name is in database (name is a secret value)")
+	end
+	if canaccessvalue then
+		assert(canaccessvalue(name), "CustomNames: Can't check if name is in database (no access to value)")
+	end
 	assert(name, "CustomNames: Can't Get Custom Name (name is nil)")
 	local isInCharDb = CharDB[name] and true or false
 	local isInBnetDb = CharToBnetDB[name] and true or false
@@ -83,6 +101,12 @@ end
 ---@param name string
 ---@return boolean exists
 function lib.isInDatabase(name)
+	if issecretvalue then
+		assert(not issecretvalue(name), "CustomNames: Can't check if name is in database (name is a secret value)")
+	end
+	if canaccessvalue then
+		assert(canaccessvalue(name), "CustomNames: Can't check if name is in database (no access to value)")
+	end
 	assert(name, "CustomNames: Can't Get Custom Name (name is nil)")
 	local nameToCheck = name
 	if not (name:match( "^.-%-.-$") or name:match("^%a+#%d+$")) then -- add realm if it isn't in btag format and doesn't exist
@@ -104,6 +128,12 @@ end
 ---@param name any
 ---@return boolean
 local function isBtag(name)
+	if issecretvalue then
+		assert(not issecretvalue(name), "CustomNames: Can't check if string is btag (name is a secret value)")
+	end
+	if canaccessvalue then
+		assert(canaccessvalue(name), "CustomNames: Can't check if string is btag (no access to value)")
+	end
 	if not name then return false end
 	return name:match("^%a+#%d+$") or name:match("^self$") -- self is a special case for the current player
 end
@@ -112,6 +142,12 @@ end
 ---@param btag string
 --- @return table list -- of characters in fullname format Name-Realm
 local function GetCharactersInBtag(btag)
+	if issecretvalue then
+		assert(not issecretvalue(btag), "CustomNames: Can't Get Characters in Btag (btag is a secret value)")
+	end
+	if canaccessvalue then
+		assert(canaccessvalue(btag), "CustomNames: Can't Get Characters in Btag (no access to value)")
+	end
 	assert(btag, "CustomNames: Can't Get Characters in Btag (btag is nil)")
 	if not BnetDB[btag] or not BnetDB[btag].chars then
 		return {}
@@ -127,6 +163,12 @@ end
 --- @param name any -- needs to be character name in format Name-Realm or battletag in format "Name#1234"
 --- @return table -- list of characters in fullname format Name-Realm
 function lib.GetLinkedCharacters(name)
+	if issecretvalue then
+		assert(not issecretvalue(name), "CustomNames: Can't Get Linked Charachter (name is a secret value)")
+	end
+	if canaccessvalue then
+		assert(canaccessvalue(name), "CustomNames: Can't Get Linked Charachter (no access to value)")
+	end
 	assert(name, "CustomNames: Can't Get Linked Characters (name is nil)")
 	if isBtag(name) then
 		return GetCharactersInBtag(name)
@@ -144,8 +186,16 @@ end
 ---@param btag string
 ---@return boolean? success
 function  lib.AddCharToBtag(charname,btag)
-	assert(charname, "CustomNames: Can't addCharToBtag (charname is nil)")
-	assert(btag, "CustomNames: Can't addCharToBtag (btag is nil)")
+	if issecretvalue then
+		assert(not issecretvalue(charname), "CustomNames: Can't Add char to btag (name is a secret value)")
+		assert(not issecretvalue(btag), "CustomNames: Can't Add char to btag (btag is a secret value)")
+	end
+	if canaccessvalue then
+		assert(canaccessvalue(charname), "CustomNames: Can't Add char to btag (no access to value)")
+		assert(canaccessvalue(btag), "CustomNames: Can't Add char to btag (no access to value)")
+	end
+	assert(charname, "CustomNames: Can't add char to btag (charname is nil)")
+	assert(btag, "CustomNames: Can't add char to btag (btag is nil)")
 	CharToBnetDB[charname] = btag	
 	BnetDB[btag] = BnetDB[btag] or {}
 	BnetDB[btag].chars = BnetDB[btag].chars or {}
@@ -160,6 +210,12 @@ end
 ---@param customName string
 ---@return boolean? success
 local function SetBnet(btag,customName)
+	if issecretvalue then
+		assert(not issecretvalue(btag), "CustomNames: Can't Set Btag (btag is a secret value)")
+	end
+	if canaccessvalue then
+		assert(canaccessvalue(btag), "CustomNames: Can't Set Bnet (no access to value)")
+	end
 	if not btag then return end
 	if not customName then
 		BnetDB[btag].name = nil
@@ -197,6 +253,13 @@ end
 ---@return boolean? success
 function lib.Set(name, customName)
     assert(name, "CustomNames: Can't SetCustomName (name is nil)")
+	if issecretvalue and issecretvalue(unit) or canaccessvalue and not canaccessvalue(unit) then return UnitName(unit) end
+	if issecretvalue then
+		assert(not issecretvalue(name), "CustomNames: Can't Set Custom Name (name is a secret value)")
+	end
+	if canaccessvalue then
+		assert(canaccessvalue(name), "CustomNames: Can't Set Custom Name (no access to value)")
+	end
 	if UnitExists(name) then	
 		local unitName, unitRealm = UnitName(name)
 		if UnitIsPlayer(name) then
@@ -247,6 +310,7 @@ end
 ---@return string? name
 ---@return string? realm
 function lib.UnitName(unit)
+	if issecretvalue and issecretvalue(unit) or canaccessvalue and not canaccessvalue(unit) then return UnitName(unit) end
 	if not unit or not UnitExists(unit) then return UnitName(unit) end
 	local unitName, unitRealm = UnitName(unit)
 	local nameToCheck = unitName .. "-" .. (unitRealm or NormalizedRealmName())
@@ -262,6 +326,7 @@ end
 ---@return string? name
 ---@return string? realm
 function lib.UnitNameUnmodified(unit)
+	if issecretvalue and issecretvalue(unit) or canaccessvalue and not canaccessvalue(unit) then return UnitNameUnmodified(unit) end
 	if not unit or not UnitExists(unit) then return UnitNameUnmodified(unit) end
 	local unitName, unitRealm = UnitNameUnmodified(unit)
 	local nameToCheck = unitName .. "-" .. (unitRealm or NormalizedRealmName())
@@ -277,6 +342,7 @@ end
 ---@return string? name
 ---@return string? realm
 function lib.UnitFullName(unit)
+	if issecretvalue and issecretvalue(unit) or canaccessvalue and not canaccessvalue(unit) then return UnitFullName(unit) end
 	if not unit or not UnitExists(unit) then return UnitFullName(unit) end
 	local unitName, unitRealm = UnitFullName(unit)
 	local nameToCheck
@@ -297,6 +363,7 @@ end
 ---@param showServerName boolean
 ---@return string? name
 function lib.GetUnitName(unit,showServerName)
+	if issecretvalue and issecretvalue(unit) or canaccessvalue and not canaccessvalue(unit) then return GetUnitName(unit, showServerName) end
 	if not unit or not UnitExists(unit) then return GetUnitName(unit, showServerName) end
 	local unitName, unitRealm = UnitFullName(unit)	
 	local nameToCheck
