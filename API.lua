@@ -253,7 +253,7 @@ end
 ---@return boolean? success
 function lib.Set(name, customName)
     assert(name, "CustomNames: Can't SetCustomName (name is nil)")
-	if issecretvalue and issecretvalue(unit) or canaccessvalue and not canaccessvalue(unit) then return UnitName(unit) end
+	if issecretvalue and issecretvalue(name) or canaccessvalue and not canaccessvalue(name) then return UnitName(name) end
 	if issecretvalue then
 		assert(not issecretvalue(name), "CustomNames: Can't Set Custom Name (name is a secret value)")
 	end
@@ -310,7 +310,7 @@ end
 ---@return string? name
 ---@return string? realm
 function lib.UnitName(unit)
-	if issecretvalue and issecretvalue(unit) or canaccessvalue and not canaccessvalue(unit) then return UnitName(unit) end
+	if issecretvalue and issecretvalue(unit) or canaccessvalue and not canaccessvalue(unit) or issecretvalue and issecretvalue(UnitName(unit)) then return UnitName(unit) end
 	if not unit or not UnitExists(unit) then return UnitName(unit) end
 	local unitName, unitRealm = UnitName(unit)
 	local nameToCheck = unitName .. "-" .. (unitRealm or NormalizedRealmName())
