@@ -253,13 +253,7 @@ end
 ---@return boolean? success
 function lib.Set(name, customName)
     assert(name, "CustomNames: Can't SetCustomName (name is nil)")
-	if issecretvalue and issecretvalue(name) or canaccessvalue and not canaccessvalue(name) then return UnitName(name) end
-	if issecretvalue then
-		assert(not issecretvalue(name), "CustomNames: Can't Set Custom Name (name is a secret value)")
-	end
-	if canaccessvalue then
-		assert(canaccessvalue(name), "CustomNames: Can't Set Custom Name (no access to value)")
-	end
+	if issecretvalue and issecretvalue(name) or canaccessvalue and not canaccessvalue(name) then return assert(false, "CustomNames: Can't Set Custom Name (name is a secret value)") end
 	if UnitExists(name) then	
 		local unitName, unitRealm = UnitName(name)
 		if UnitIsPlayer(name) then

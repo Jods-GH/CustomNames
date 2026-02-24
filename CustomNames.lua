@@ -56,6 +56,10 @@ SLASH_CustomNames3 = '/CustomNames'
 SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
 	if string.find(string.lower(msg), "add (.-) to (.-)") then --add
 		local _, _, type, from, to = string.find(msg, "(.-) (.*) to (.*)")
+		if from and not string.find(from, "#") and not string.find(from, "-") and not string.find(from, "self") then
+			print("No realm or btag specified, assuming current realm.")
+			from = from .. "-" .. NormalizedRealmName()
+		end
 		lib.Set(from, to)
 	elseif string.find(string.lower(msg), "del (.-)") then --delete
 		local _, _, type, from = string.find(msg, "(.-) (.*)")
