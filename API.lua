@@ -40,11 +40,11 @@ function lib.Get(name)
 	end
 	assert(name, "CustomNames: Can't Get Custom Name (name is nil)")
 	local nameToCheck = name
-	if not (name:match( "^.-%-.-$") or name:match("^%a+#%d+$")) then -- add realm if it isn't in btag format and doesn't exist
+	if not (name:match( "^.-%-.-$") or name:match("^%w+#%d+$")) then -- add realm if it isn't in btag format and doesn't exist
 		nameToCheck = name .. "-" .. NormalizedRealmName()
 	end
 	if CharDB[nameToCheck] then
-		return CharDB[nameToCheck]	
+		return CharDB[nameToCheck]
 	elseif BnetDB[nameToCheck] and BnetDB[nameToCheck].name then
 		return BnetDB[nameToCheck].name
 	elseif CharToBnetDB[nameToCheck] and BnetDB[CharToBnetDB[nameToCheck]] and BnetDB[CharToBnetDB[nameToCheck]].chars 
@@ -109,11 +109,11 @@ function lib.isInDatabase(name)
 	end
 	assert(name, "CustomNames: Can't Get Custom Name (name is nil)")
 	local nameToCheck = name
-	if not (name:match( "^.-%-.-$") or name:match("^%a+#%d+$")) then -- add realm if it isn't in btag format and doesn't exist
+	if not (name:match( "^.-%-.-$") or name:match("^%w+#%d+$")) then -- add realm if it isn't in btag format and doesn't exist
 		nameToCheck = name .. "-" .. NormalizedRealmName()
 	end
 	if CharDB[nameToCheck] then
-		return true	
+		return true
 	elseif BnetDB[nameToCheck] and BnetDB[nameToCheck].name then
 		return true
 	elseif CharToBnetDB[nameToCheck] and BnetDB[CharToBnetDB[nameToCheck]] and BnetDB[CharToBnetDB[nameToCheck]].chars 
