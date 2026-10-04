@@ -22,10 +22,23 @@ loadedFrame:SetScript("OnEvent", function(self, event, addon)
 	end
 end)
 
+lib.IsForever = function()
+	return WOW_PROJECT_ID == WOW_PROJECT_CAMELOT
+end
+
+lib.FixNameForever = function(name)
+	if lib.IsForever() then
+		return name:gsub(" ","-")
+	else
+		return name
+	end
+end
+
 
 --- Since GetNormalizedRealmName can return nil we need to gsub GetRealmName ourselfs if need be
 ---@return string Realm
 local function NormalizedRealmName()
+	assert(not lib.IsForever(), "CustomNames: Can't Get Normalized Realm Name (Forever doesn't have a realm name)")
 	return GetNormalizedRealmName() or GetRealmName():gsub("[%s-]+", "")
 end
 ---returns custom name if exists, otherwise returns original name. Expects Name-Realm for Players and Name for NPCs. Also allows for the Lookup of battletags in format "Name#1234"
@@ -40,8 +53,12 @@ function lib.Get(name)
 	end
 	assert(name, "CustomNames: Can't Get Custom Name (name is nil)")
 	local nameToCheck = name
-	if not (name:match( "^.-%-.-$") or name:match("^%w+#%d+$")) then -- add realm if it isn't in btag format and doesn't exist
-		nameToCheck = name .. "-" .. NormalizedRealmName()
+
+	if lib.IsForever() then
+		nameToCheck = lib.FixNameForever(name)
+	end
+	if not (nameToCheck:match( "^.-%-.-$") or nameToCheck:match("^%w+#%d+$")) and not lib.IsForever()then -- add realm if it isn't in btag format and doesn't exist
+	    nameToCheck = nameToCheck .. "-" .. NormalizedRealmName()
 	end
 	if CharDB[nameToCheck] then
 		return CharDB[nameToCheck]
@@ -109,7 +126,11 @@ function lib.isInDatabase(name)
 	end
 	assert(name, "CustomNames: Can't Get Custom Name (name is nil)")
 	local nameToCheck = name
+	if lib.IsForever() then
+		nameToCheck = lib.FixNameForever(name)
+	end
 	if not (name:match( "^.-%-.-$") or name:match("^%w+#%d+$")) then -- add realm if it isn't in btag format and doesn't exist
+		assert(not lib.IsForever(), "CustomNames: Can't Get Custom Name (name is not in one of the formats Firstname-Lastname or BattleTag#12345)")	
 		nameToCheck = name .. "-" .. NormalizedRealmName()
 	end
 	if CharDB[nameToCheck] then
@@ -256,15 +277,18 @@ function lib.Set(name, customName)
 	if issecretvalue and issecretvalue(name) or canaccessvalue and not canaccessvalue(name) then return assert(false, "CustomNames: Can't Set Custom Name (name is a secret value)") end
 	if UnitExists(name) then	
 		local unitName, unitRealm = UnitName(name)
-		if UnitIsPlayer(name) then
+		if UnitIsPlayer(name) or lib.IsForever() then
 			name = unitName .. "-" .. (unitRealm or NormalizedRealmName())
 		else
 			name = unitName
 		end
+		name = lib.FixNameForever(name)
 	elseif name:match("^(.-)#(%d+)$") then
 		return SetBnet(name,customName)
 	elseif name:lower():trim():match("self") then
 		return SetBnet("self",customName)
+	elseif lib.IsForever() then
+		name = lib.FixNameForever(name)
 	else
 		assert(name:match("^(.+)-(.+)$"), "CustomNames: Can't set custom Name (name is not in one of the formats UnitToken, Name-Realm or BattleTag#12345)")
 	end
@@ -307,7 +331,17 @@ function lib.UnitName(unit)
 	if issecretvalue and issecretvalue(unit) or canaccessvalue and not canaccessvalue(unit) or issecretvalue and issecretvalue(UnitName(unit)) then return UnitName(unit) end
 	if not unit or not UnitExists(unit) then return UnitName(unit) end
 	local unitName, unitRealm = UnitName(unit)
-	local nameToCheck = unitName .. "-" .. (unitRealm or NormalizedRealmName())
+	local nameToCheck 
+	if lib.IsForever() then
+		if UnitIsPlayer(unit) and unitRealm then
+			nameToCheck = unitName .. "-" .. unitRealm
+		else
+			nameToCheck = unitName
+		end
+		nameToCheck = lib.FixNameForever(nameToCheck)
+	else
+		nameToCheck = unitName .. "-" .. (unitRealm or NormalizedRealmName())
+	end
 	local customName = lib.Get(nameToCheck)
 	if customName ~= nameToCheck then
 		return customName,unitRealm
@@ -323,7 +357,17 @@ function lib.UnitNameUnmodified(unit)
 	if issecretvalue and issecretvalue(unit) or canaccessvalue and not canaccessvalue(unit) then return UnitNameUnmodified(unit) end
 	if not unit or not UnitExists(unit) then return UnitNameUnmodified(unit) end
 	local unitName, unitRealm = UnitNameUnmodified(unit)
-	local nameToCheck = unitName .. "-" .. (unitRealm or NormalizedRealmName())
+	local nameToCheck 
+	if lib.IsForever() then
+		if UnitIsPlayer(unit) then
+			nameToCheck = unitName .. "-" .. unitRealm
+		else
+			nameToCheck = unitName
+		end
+		nameToCheck = lib.FixNameForever(nameToCheck)
+	else
+		nameToCheck = unitName .. "-" .. (unitRealm or NormalizedRealmName())
+	end
 	local customName = lib.Get(nameToCheck)
 	if customName ~= nameToCheck then
 		return customName,unitRealm
@@ -339,11 +383,16 @@ function lib.UnitFullName(unit)
 	if issecretvalue and issecretvalue(unit) or canaccessvalue and not canaccessvalue(unit) then return UnitFullName(unit) end
 	if not unit or not UnitExists(unit) then return UnitFullName(unit) end
 	local unitName, unitRealm = UnitFullName(unit)
-	local nameToCheck
-	if UnitIsPlayer(unit) then
-		nameToCheck = unitName .. "-" .. (unitRealm or NormalizedRealmName())
+	local nameToCheck 
+	if lib.IsForever() then
+		if UnitIsPlayer(unit) then
+			nameToCheck = unitName .. "-" .. unitRealm
+		else
+			nameToCheck = unitName
+		end
+		nameToCheck = lib.FixNameForever(nameToCheck)
 	else
-		nameToCheck= unitName
+		nameToCheck = unitName .. "-" .. (unitRealm or NormalizedRealmName())
 	end
 	local customName = lib.Get(nameToCheck)
 	if customName ~= nameToCheck then
@@ -352,7 +401,7 @@ function lib.UnitFullName(unit)
 		return unitName,unitRealm
 	end
 end
----behaves equivalent to UnitFullName(unit)
+---behaves equivalent to GetUnitName(unit)
 ---@param unit UnitToken
 ---@param showServerName boolean
 ---@return string? name
@@ -361,7 +410,14 @@ function lib.GetUnitName(unit,showServerName)
 	if not unit or not UnitExists(unit) then return GetUnitName(unit, showServerName) end
 	local unitName, unitRealm = UnitFullName(unit)	
 	local nameToCheck
-	if UnitIsPlayer(unit) then
+	if lib.IsForever() then
+		if UnitIsPlayer(unit) then
+			nameToCheck = unitName .. "-" .. unitRealm
+		else
+			nameToCheck = unitName
+		end
+		nameToCheck = lib.FixNameForever(nameToCheck)
+	elseif UnitIsPlayer(unit) then
 		nameToCheck = unitName .. "-" .. (unitRealm or NormalizedRealmName())
 	else
 		nameToCheck= unitName

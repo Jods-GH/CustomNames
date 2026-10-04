@@ -23,10 +23,14 @@ frame:SetScript("OnEvent",function(self,...)
 			local number = C_BattleNet.GetFriendNumGameAccounts(friendId)
 			if number then
 				local bnetAccountInfo = C_BattleNet.GetFriendAccountInfo(friendId)
-				if bnetAccountInfo and bnetAccountInfo.gameAccountInfo and bnetAccountInfo.gameAccountInfo.wowProjectID and bnetAccountInfo.gameAccountInfo.wowProjectID == WOW_PROJECT_MAINLINE 
+				if bnetAccountInfo and bnetAccountInfo.gameAccountInfo and bnetAccountInfo.gameAccountInfo.wowProjectID and bnetAccountInfo.gameAccountInfo.wowProjectID == WOW_PROJECT_ID 
 				and bnetAccountInfo.gameAccountInfo.characterName and bnetAccountInfo.gameAccountInfo.realmName and bnetAccountInfo.battleTag then
 					local Character = bnetAccountInfo.gameAccountInfo.characterName.."-"..bnetAccountInfo.gameAccountInfo.realmName
-					if Character and not  lib.IsCharInBnetDatabase(Character) and bnetAccountInfo.battleTag then
+					if lib.IsForever() then
+						Character = bnetAccountInfo.gameAccountInfo.characterName
+						Character = lib.FixNameForever(Character)
+					end
+					if Character and not  lib.IsInBnetDatabase(Character) and bnetAccountInfo.battleTag then
 						lib.AddCharToBtag(Character,bnetAccountInfo.battleTag)
 					end
 				end
@@ -35,7 +39,7 @@ frame:SetScript("OnEvent",function(self,...)
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		local name,realm = UnitFullName("player")
 		local fullName = name.."-"..realm
-		if not lib.IsCharInBnetDatabase(fullName) then
+		if not lib.IsInBnetDatabase(fullName) then
 			lib.AddCharToBtag(fullName, "self")
 		end
 	end
@@ -43,8 +47,8 @@ end)
 
 
 
-
 --- Since GetNormalizedRealmName can return nil we need to gsub GetRealmName ourselfs if need be
+---
 ---@return string Realm
 local function NormalizedRealmName()
 	return GetNormalizedRealmName() or GetRealmName():gsub("[%s-]+", "")
@@ -57,8 +61,10 @@ SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
 	if string.find(string.lower(msg), "add (.-) to (.-)") then --add
 		local _, _, type, from, to = string.find(msg, "(.-) (.*) to (.*)")
 		if from and not string.find(from, "#") and not string.find(from, "-") and not string.find(from, "self") then
-			print("No realm or btag specified, assuming current realm.")
-			from = from .. "-" .. NormalizedRealmName()
+			
+			if not UnitExists(from) and not lib.IsForever() then				
+				from = from .. "-" .. NormalizedRealmName()
+			end
 		end
 		lib.Set(from, to)
 	elseif string.find(string.lower(msg), "del (.-)") then --delete
@@ -66,8 +72,12 @@ SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
 		if UnitExists(from) then	
 			local unitName, unitRealm = UnitName(from)
 			local nameToCheck = unitName
-			if UnitIsPlayer(from) then
+			if UnitIsPlayer(from) and not lib.IsForever() then
 				nameToCheck= unitName .. "-" .. (unitRealm or NormalizedRealmName())
+			elseif lib.IsForever() then
+				nameToCheck = lib.FixNameForever(unitName)
+			else
+				nameToCheck = unitName .. "-".. unitRealm
 			end
 			if nameToCheck and lib.isCharInDatabase(nameToCheck) then
 				local to =  lib.Get(nameToCheck)
@@ -86,8 +96,12 @@ SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
 		if UnitExists(from) then	
 			local unitName, unitRealm = UnitName(from)
 			local nameToCheck = unitName
-			if UnitIsPlayer(from) then
+			if UnitIsPlayer(from) and not lib.IsForever() then
 				nameToCheck= unitName .. "-" .. (unitRealm or NormalizedRealmName())
+			elseif lib.IsForever() then
+				nameToCheck = lib.FixNameForever(unitName)
+			else
+				nameToCheck = unitName .. "-".. unitRealm
 			end
 			if nameToCheck and lib.isCharInDatabase(nameToCheck) then
 				lib.Set(from, to)
