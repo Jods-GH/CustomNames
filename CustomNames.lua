@@ -1,15 +1,16 @@
+local appName, private = ...
 local lib = LibStub("CustomNames")
 
 lib:RegisterCallback("Name_Added", function(event, name, customName)
-	print("Added: " .. name .. " is now Renamed to " .. customName)
+	print(private.getLocalisation("CallbackAdded"):format(name, customName))
 end)
 
 lib:RegisterCallback("Name_Removed", function(event, name)
-	print("Deleted: " .. name .. " is no longer Renamed")
+	print(private.getLocalisation("CallbackRemoved"):format(name))
 end)
 
 lib:RegisterCallback("Name_Update", function(event, name, customName, oldCustomName)
-	print("Edited: " .. name .. " is now Renamed to " .. customName .. " (was " .. oldCustomName .. ")")
+	print(private.getLocalisation("CallbackUpdated"):format(name, customName, oldCustomName))
 end)
 
 local frame = CreateFrame("Frame")
@@ -89,7 +90,7 @@ SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
 		elseif lib.IsInBnetDatabase(from) then
 			lib.Set(from)
 		else
-			print("No such name in database")
+			print(private.getLocalisation("NoSuchName"))
 		end
 	elseif string.find(string.lower(msg), "edit (.-)") then --edit
 		local _, _, type, from, to = string.find(msg, "(.-) (.*) to (.*)")
@@ -111,7 +112,7 @@ SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
 		elseif lib.IsInBnetDatabase(from) then
 			lib.Set(from, to)
 		else
-			print("No such name in database");
+			print(private.getLocalisation("NoSuchName"));
 		end
 	elseif msg == "list" or msg == "l" then
 		for k,v in pairs(lib.GetList()) do
@@ -119,6 +120,11 @@ SlashCmdList['CustomNames'] = function(msg) -- credit to Ironi
 			
 		end
 	else
-		print("CustomNames example usage:\rAdding a new name: /cn add Name to CustomName\rEditing name: /cn edit Name to CustomName\rDeleting old name: /cn del Name\rListing every name: /cn l(ist)")
+		print(private.getLocalisation("CommandUsageHeader"))
+		print(private.getLocalisation("CommandUsageWindow"))
+		print(private.getLocalisation("CommandUsageAdd"))
+		print(private.getLocalisation("CommandUsageEdit"))
+		print(private.getLocalisation("CommandUsageDelete"))
+		print(private.getLocalisation("CommandUsageList"))
 	end
 end
