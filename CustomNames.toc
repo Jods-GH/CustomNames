@@ -3,7 +3,9 @@
 ## Version: @project-version@
 ## Notes: Manages and returns Custom Names
 ## Author: Jods
-## SavedVariables: CustomNamesDB
+## SavedVariables: CustomNamesDB, CustomNames
+## OptionalDeps: Ace3
+## AddonCompartmentFunc: CustomNames_AddonCompartmentFunction
 ## X-Curse-Project-ID: 867373
 ## X-Wago-ID: QKyww7N7
 ## X-WoWI-ID: 26577
@@ -38,4 +40,29 @@ Locales\zhCN.lua
 Locales\zhTW.lua
 
 Locales\Locales.lua
+
+#util
+Util\NameUtil.lua
+Util\ClassCache.lua
+Util\ImportExport.lua
+
+#ui
+UI\Theme.lua
+UI\Widgets\Layouts.lua
+UI\Widgets\Pane.lua
+UI\Widgets\Window.lua
+UI\Widgets\Scroll.lua
+UI\Widgets\List.lua
+UI\Widgets\CharacterGrid.lua
+UI\Widgets\Button.lua
+UI\Widgets\Tabs.lua
+UI\Widgets\EditBox.lua
+UI\Widgets\Toggle.lua
+UI\NameDialog.lua
+UI\UnitMenu.lua
+UI\DetailPane.lua
+UI\NamesWindow.lua
+UI\SettingsPanel.lua
+
+# Core
 CustomNames.lua

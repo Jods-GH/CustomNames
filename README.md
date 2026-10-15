@@ -4,6 +4,22 @@
 [![Release][SVG-Release]][Release]
 # CustomNames
 Adds Management of Custom Names
+# Managing names
+Open the CustomNames window with `/cn`, through the Addon Compartment (Retail) or with the button under Options -> AddOns -> CustomNames.
+
+* **Right-click** a player or npc (unit frames, friends list, chat, guild and community rosters) and pick **CustomNames** to set, change or remove a name without opening the window. For Battle.net friends the name can be set for the whole BattleTag. Bosses are not supported, their names are not available to addons.
+* The window lists your names on the left. Select one to change or remove its name on the right, press Enter to save.
+* **Characters** tab: names of single characters (`Name-Realm`) and npcs, colored by class once the character was seen.
+* **BattleTags** tab: a name for a BattleTag (`BattleTag#12345`, your own account is always listed) applies to all characters linked to it. The linked characters are shown on the right, grouped by realm.
+* **Search** filters the list and also finds a BattleTag by one of its characters. **+ Add name** lets you type a name yourself, **Export** creates a string with all your names and **Import** adds the names of such a string to your list.
+
+The chat commands still work:
+```
+/cn add Name to CustomName
+/cn edit Name to CustomName
+/cn del Name
+/cn list
+```
 # Usage 
 ```lua
 local Lib = LibStub("CustomNames")
@@ -18,6 +34,7 @@ local customName = Lib.UnitFullName(unit) -- behaves equivalent to normal UnitFu
 local customName = Lib.UnitNameUnmodified(unit) -- behaves equivalent to normal UnitNameUnmodified()
 local customName = Lib.GetUnitName(unit,showServerName) -- behaves equivalent to normal GetUnitName()
 local NameList = Lib.GetList() -- returns a list with all Database entrys
+local NameList = Lib.GetCharList() -- returns a list with all names that are set directly on a character or npc (without the names characters get from their btag)
 local NameList = Lib.GetLinkedCharacters(name) --- returns all characters linked to a given character or btag
 
 -- NameList Format
