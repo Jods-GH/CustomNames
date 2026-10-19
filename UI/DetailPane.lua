@@ -18,6 +18,7 @@ local COLUMNS_LAYOUT = "CustomNames-Columns"
 local DOCK_LAYOUT = "CustomNames-Dock"
 local KIND_CHAR = "char"
 local KIND_BTAG = "btag"
+local SLOT_LINK = "link" -- a pending notice that belongs below the field that links characters
 local variables = {
     captionMargin = 4,
     fieldMargin = 18,
@@ -159,6 +160,65 @@ local function SetNotice(label, text, color)
     container:DoLayout()
 end
 
+---Adds the field that links a character to a btag by hand
+---@param btag string
+---@param doneText string? -- shown below the field after a character was linked
+local function AddLinkCharacter(btag, doneText)
+    local linkBox = AceGUI:Create("CustomNames-EditBox")
+    linkBox:SetPlaceholder(private.getLocalisation("LinkCharacterPlaceholder"))
+    linkBox:SetUserData("flex", 1)
+    linkBox:SetCallback("OnTextChanged", function()
+        editing = true
+    end)
+
+    local notice
+    local function ShowError(text)
+        SetNotice(notice, text, Theme.colors.danger)
+    end
+
+    local function Link()
+        local charname, errorKey = private.NormalizeInputName(linkBox:GetText())
+        if not charname then
+            ShowError(private.getLocalisation(errorKey))
+            return
+        end
+        if charname == private.SELF_BTAG or charname:find("#", 1, true) then
+            ShowError(private.getLocalisation("ErrorLinkNeedsCharacter"))
+            return
+        end
+        charname = (private.FixNameForever(charname))
+        if not private.IsValidName(charname) then
+            ShowError(private.getLocalisation("ErrorLinkNeedsCharacter"))
+            return
+        end
+        -- the library has no way to move a character to another btag, so it is refused instead
+        local linkedTo = private.GetBattleTagForChar(charname)
+        if linkedTo == btag then
+            ShowError(private.getLocalisation("ErrorAlreadyLinked"):format(charname))
+            return
+        elseif linkedTo then
+            ShowError(private.getLocalisation("ErrorLinkedElsewhere"):format(charname, private.GetDisplayName(linkedTo)))
+            return
+        end
+        lib.AddCharToBtag(charname, btag)
+        pendingNotice = { key = btag, slot = SLOT_LINK, text = private.getLocalisation("CharacterLinked"):format(charname) }
+        handlers.OnChanged(btag)
+    end
+    linkBox:SetCallback("OnEnterPressed", Link)
+
+    local line = CreateLine()
+    line:AddChild(linkBox)
+    line:AddChild(CreateButton("LinkCharacter", "ghost", Link))
+    Add(line, variables.noticeMargin)
+
+    if doneText then
+        notice = CreateLabel(doneText, "small", Theme.colors.success)
+    else
+        notice = CreateLabel(" ", "small")
+    end
+    Add(notice, variables.noticeMargin)
+end
+
 ---@param container_ table -- pane widget with the dock layout that doesn't adjust its height
 ---@param handlers_ table -- { OnChanged = fun(key: string?, keepDetail: boolean?), OnNavigate = fun(key: string), OnCancel = fun() }
 DetailPane.Attach = function(container_, handlers_)
@@ -191,6 +251,8 @@ end
 DetailPane.ShowEntry = function(entry)
     Begin("entry:" .. entry.key)
     local key = entry.key
+    local pending = pendingNotice and pendingNotice.key == key and pendingNotice or nil
+    pendingNotice = nil
 
     if entry.kind == KIND_BTAG then
         local count = private.getLocalisation("CharacterCount"):format(#entry.chars)
@@ -224,12 +286,11 @@ DetailPane.ShowEntry = function(entry)
         end
     end)
 
-    if pendingNotice and pendingNotice.key == key then
-        notice = CreateLabel(pendingNotice.text, "small", Theme.colors.success)
+    if pending and not pending.slot then
+        notice = CreateLabel(pending.text, "small", Theme.colors.success)
     else
         notice = CreateLabel(private.getLocalisation("EnterToSave"), "small", Theme.colors.disabled)
     end
-    pendingNotice = nil
     Add(notice, variables.noticeMargin)
 
     if entry.kind == KIND_CHAR then
@@ -267,6 +328,7 @@ DetailPane.ShowEntry = function(entry)
 
     if entry.kind == KIND_BTAG then
         Add(CreateCaption(private.getLocalisation("LinkedCharacters")), variables.sectionMargin)
+        AddLinkCharacter(key, pending and pending.slot == SLOT_LINK and pending.text)
         if #entry.chars == 0 then
             local text = private.getLocalisation("NoLinkedCharacters")
             Add(CreateLabel(text, "small", Theme.colors.muted), variables.noticeMargin)

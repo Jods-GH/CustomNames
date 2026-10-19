@@ -56,7 +56,7 @@ function lib.Get(name)
 	local nameToCheck = name
 
 	if private.IsForever() then
-		nameToCheck = lib.FixNameForever(name)
+		nameToCheck = private.FixNameForever(name)
 	end
 	if not (nameToCheck:match( "^.-%-.-$") or nameToCheck:match("^%w+#%d+$")) and not private.IsForever()then -- add realm if it isn't in btag format and doesn't exist
 	    nameToCheck = nameToCheck .. "-" .. NormalizedRealmName()

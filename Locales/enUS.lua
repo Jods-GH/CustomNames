@@ -48,7 +48,13 @@ if L then
     L["ShowBattleTag"] = "Show"
     L["OverridesBattleTagName"] = "The custom name above replaces the BattleTag name %s for this character."
     L["LinkedCharacters"] = "Linked characters"
-    L["NoLinkedCharacters"] = "No linked characters known yet. They are added when they are seen online."
+    L["NoLinkedCharacters"] = "No linked characters known yet. They are added when they are seen online, or add one above."
+    L["LinkCharacterPlaceholder"] = "Name-Realm"
+    L["LinkCharacter"] = "Add character"
+    L["CharacterLinked"] = "%s added"
+    L["ErrorLinkNeedsCharacter"] = "Enter a character as Name-Realm."
+    L["ErrorAlreadyLinked"] = "%s is already linked to this BattleTag."
+    L["ErrorLinkedElsewhere"] = "%s is already linked to %s."
 
     -- adding a name
     L["AddCharacterTitle"] = "Add a character"

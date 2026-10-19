@@ -73,7 +73,7 @@ local function ResolveTarget(contextData)
         if IsReadableText(name) then
             if not IsReadableText(server) then server = nil end
             if private.IsForever() then
-                charKey = (lib.FixNameForever(server and (name .. "-" .. server) or name))
+                charKey = (private.FixNameForever(server and (name .. "-" .. server) or name))
             else
                 charKey = name .. "-" .. (server or private.NormalizedRealmName())
             end
