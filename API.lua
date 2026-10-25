@@ -35,6 +35,15 @@ private.FixNameForever = function(name)
 	end
 end
 
+---@return string? battleTag -- the battletag of the player, the api looks it up as "self"
+private.GetOwnBattleTag = function()
+	if not BNGetInfo then return nil end
+	local _, battleTag = BNGetInfo()
+	if type(battleTag) == "string" and battleTag ~= "" then
+		return battleTag
+	end
+	return nil
+end
 
 --- Since GetNormalizedRealmName can return nil we need to gsub GetRealmName ourselfs if need be
 ---@return string Realm
@@ -58,7 +67,9 @@ function lib.Get(name)
 	if private.IsForever() then
 		nameToCheck = private.FixNameForever(name)
 	end
-	if not (nameToCheck:match( "^.-%-.-$") or nameToCheck:match("^%w+#%d+$")) and not private.IsForever()then -- add realm if it isn't in btag format and doesn't exist
+	if name == "self" or name == private.GetOwnBattleTag() then
+		nameToCheck = "self"
+	elseif not (nameToCheck:match( "^.-%-.-$") or nameToCheck:match("^%w+#%d+$")) and not private.IsForever()then -- add realm if it isn't in btag format and doesn't exist
 	    nameToCheck = nameToCheck .. "-" .. NormalizedRealmName()
 	end
 	if CharDB[nameToCheck] then
@@ -130,7 +141,9 @@ function lib.isInDatabase(name)
 	if private.IsForever() then
 		nameToCheck = private.FixNameForever(name)
 	end
-	if not (name:match( "^.-%-.-$") or name:match("^%w+#%d+$")) then -- add realm if it isn't in btag format and doesn't exist
+	if name == "self" or name == private.GetOwnBattleTag() then
+		nameToCheck = "self"
+	elseif not (name:match( "^.-%-.-$") or name:match("^%w+#%d+$")) then -- add realm if it isn't in btag format and doesn't exist
 		assert(not private.IsForever(), "CustomNames: Can't Get Custom Name (name is not in one of the formats Firstname-Lastname or BattleTag#12345)")	
 		nameToCheck = name .. "-" .. NormalizedRealmName()
 	end

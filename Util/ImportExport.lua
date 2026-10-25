@@ -10,16 +10,6 @@ local variables = {
     maxEntries = 5000,
 }
 
----@return string? battleTag -- the battletag of the player, used to share the "self" entry
-local function GetOwnBattleTag()
-    if not BNGetInfo then return nil end
-    local _, battleTag = BNGetInfo()
-    if type(battleTag) == "string" and battleTag ~= "" then
-        return battleTag
-    end
-    return nil
-end
-
 local function IsValidText(value)
     return type(value) == "string" and value ~= "" and #value <= variables.maxNameLength
 end
@@ -43,7 +33,7 @@ private.ExportNames = function()
         chars = lib.GetCharList(),
         btags = {},
     }
-    local ownBattleTag = GetOwnBattleTag()
+    local ownBattleTag = private.GetOwnBattleTag()
     for btag, value in pairs(private.GetBnetList()) do
         -- "self" only means something on this account, so it is shared under the real battletag
         local exportTag = btag == private.SELF_BTAG and ownBattleTag or btag
@@ -107,7 +97,7 @@ end
 local function ApplyImport(data, overwrite)
     local result = { added = 0, updated = 0, skipped = 0 }
     local processed = 0
-    local ownBattleTag = GetOwnBattleTag()
+    local ownBattleTag = private.GetOwnBattleTag()
 
     if type(data.chars) == "table" then
         local charList = lib.GetCharList()
