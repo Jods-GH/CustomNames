@@ -219,8 +219,110 @@ local function AddLinkCharacter(btag, doneText)
     Add(notice, variables.noticeMargin)
 end
 
+---Adds a scrolling grid of characters that takes the rest of the pane
+---@param chars table -- sorted list of names in the format Name-Realm
+---@param margin number?
+local function AddCharacterGrid(chars, margin)
+    local scroll = AceGUI:Create("CustomNames-Scroll")
+    scroll:SetLayout(DOCK_LAYOUT)
+    local grid = AceGUI:Create("CustomNames-CharacterGrid")
+    grid:SetGroups(BuildCharacterGroups(chars))
+    grid:SetUserData("dock", "TOP")
+    scroll:AddChild(grid)
+    Add(scroll, margin or variables.noticeMargin, "FILL")
+    return scroll
+end
+
+-- What tab providers of other addons build the right side with (see lib.RegisterTabProvider and lib.GetUIToolkit).
+-- Texts are passed as they are shown, not as localisation keys
+DetailPane.Toolkit = {
+    Theme = Theme,
+    margins = variables,
+    Begin = Begin,
+    Finish = Finish,
+    Add = Add,
+    CreateLabel = CreateLabel,
+    CreateCaption = CreateCaption,
+    AddHeader = AddHeader,
+    CreateLine = CreateLine,
+    CreateSpacer = CreateSpacer,
+    SetNotice = SetNotice,
+    BuildCharacterGroups = BuildCharacterGroups,
+    AddCharacterGrid = AddCharacterGrid,
+    ---@param text string
+    ---@param variant string -- primary, ghost, danger or link
+    ---@param onClick function
+    CreateButton = function(text, variant, onClick)
+        local button = AceGUI:Create("CustomNames-Button")
+        button:SetVariant(variant)
+        button:SetText(text)
+        button:SetCallback("OnClick", onClick)
+        return button
+    end,
+    ---@param label string?
+    ---@param placeholder string?
+    CreateEditBox = function(label, placeholder)
+        local editBox = AceGUI:Create("CustomNames-EditBox")
+        editBox:SetLabel(label)
+        editBox:SetPlaceholder(placeholder)
+        editBox:SetCallback("OnTextChanged", function()
+            editing = true
+        end)
+        return editBox
+    end,
+    ---@param label string
+    ---@param value boolean
+    ---@param onChange fun(value: boolean)
+    CreateToggle = function(label, value, onChange)
+        local toggle = AceGUI:Create("CustomNames-Toggle")
+        toggle:SetLabel(label)
+        toggle:SetValue(value)
+        toggle:SetCallback("OnValueChanged", function(_, _, newValue)
+            onChange(newValue)
+        end)
+        return toggle
+    end,
+    ---Rebuilds the list (and the right side if detail is true) on the next frame
+    ---@param detail boolean?
+    Refresh = function(detail)
+        if handlers then
+            handlers.OnChanged(nil, not detail)
+        end
+    end,
+    ---Selects an entry of the shown tab and rebuilds the window on the next frame
+    ---@param key string
+    Select = function(key)
+        if handlers then
+            handlers.OnSelectInTab(key)
+        end
+    end,
+}
+
+---Shown on the guild tab while CustomNames_GuildSync isn't loaded
+---@param stateKey string -- localisation key of the text that says what is missing
+---@param url string? -- where the addon can be downloaded
+DetailPane.ShowGuildInstall = function(stateKey, url)
+    Begin("guildInstall:" .. stateKey)
+    AddHeader(private.getLocalisation("GuildInstallTitle"))
+    Add(CreateLabel(private.getLocalisation(stateKey), "body", Theme.colors.muted), variables.fieldMargin)
+    if url then
+        -- the game can't open links, so the address is offered for copying
+        local urlBox = Add(CreateEditBox("GuildInstallUrlLabel"), variables.sectionMargin)
+        urlBox:SetText(url)
+        urlBox:SetCallback("OnTextChanged", function()
+            urlBox:SetText(url)
+            urlBox:HighlightText()
+        end)
+        urlBox:SetCallback("OnEnterPressed", function()
+            AceGUI:ClearFocus()
+        end)
+        Add(CreateLabel(private.getLocalisation("ExportHint"), "small", Theme.colors.disabled), variables.noticeMargin)
+    end
+    Finish()
+end
+
 ---@param container_ table -- pane widget with the dock layout that doesn't adjust its height
----@param handlers_ table -- { OnChanged = fun(key: string?, keepDetail: boolean?), OnNavigate = fun(key: string), OnCancel = fun() }
+---@param handlers_ table -- { OnChanged = fun(key: string?, keepDetail: boolean?), OnNavigate = fun(key: string), OnSelectInTab = fun(key: string), OnCancel = fun() }
 DetailPane.Attach = function(container_, handlers_)
     container, handlers = container_, handlers_
     shown, editing, pendingNotice = nil, false, nil
@@ -333,13 +435,7 @@ DetailPane.ShowEntry = function(entry)
             local text = private.getLocalisation("NoLinkedCharacters")
             Add(CreateLabel(text, "small", Theme.colors.muted), variables.noticeMargin)
         else
-            local scroll = AceGUI:Create("CustomNames-Scroll")
-            scroll:SetLayout(DOCK_LAYOUT)
-            local grid = AceGUI:Create("CustomNames-CharacterGrid")
-            grid:SetGroups(BuildCharacterGroups(entry.chars))
-            grid:SetUserData("dock", "TOP")
-            scroll:AddChild(grid)
-            Add(scroll, variables.noticeMargin, "FILL")
+            AddCharacterGrid(entry.chars)
         end
     end
 

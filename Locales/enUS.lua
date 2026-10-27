@@ -97,6 +97,17 @@ if L then
     L["ImportErrorDecode"] = "The export string is damaged and could not be read."
     L["ImportExportUnsupported"] = "Import and export are not supported on this game version."
 
+    -- guild tab without CustomNames_GuildSync
+    L["TabGuild"] = "Guild"
+    L["GuildListEmpty"] = "Nobody in your guild has shared their characters yet."
+    L["GuildListMissing"] = "Guild sync needs CustomNames_GuildSync."
+    L["GuildInstallTitle"] = "Guild sync"
+    L["GuildInstallMissing"] = "Install the CustomNames_GuildSync addon to share your characters with your guild and to link the characters of your guildmates to their accounts.\n\nYou approve everything that is received before it is saved."
+    L["GuildInstallDisabled"] = "CustomNames_GuildSync is installed but disabled. Enable it in the AddOn list and reload your interface."
+    L["GuildInstallReload"] = "CustomNames_GuildSync is enabled but not loaded yet. Type /reload to load it."
+    L["GuildInstallOutdated"] = "CustomNames_GuildSync is loaded but could not connect to CustomNames. Update both addons."
+    L["GuildInstallUrlLabel"] = "Download"
+
     -- settings panel
     L["SettingsDescription"] = "Manage custom names for characters and BattleTags."
     L["OpenWindow"] = "Open CustomNames"

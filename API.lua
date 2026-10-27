@@ -1,6 +1,6 @@
 local appName, private = ...
 local MAJOR_VERSION = "CustomNames"
-local MINOR_VERSION = 5
+local MINOR_VERSION = 6
 if not LibStub then error(MAJOR_VERSION .. " requires LibStub.") end
 ---@class CustomNames
 local lib = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
@@ -170,7 +170,7 @@ local function isBtag(name)
 		assert(canaccessvalue(name), "CustomNames: Can't check if string is btag (no access to value)")
 	end
 	if not name then return false end
-	return name:match("^%a+#%d+$") or name:match("^self$") -- self is a special case for the current player
+	return name:match("^[^#%s]+#%d+$") or name:match("^self$") -- self is a special case for the current player
 end
 
 ---returns all characters linked to a given btag
@@ -239,6 +239,77 @@ function  lib.AddCharToBtag(charname,btag)
 		lib.callbacks:Fire("Name_Added", charname, BnetDB[btag].name)
 	end
 	return true
+end
+
+---removes the link between a character name and a btag
+---@param charname string
+---@param btag string
+---@return boolean success -- false if the character wasn't linked to that btag
+function lib.RemoveCharFromBtag(charname,btag)
+	if issecretvalue then
+		assert(not issecretvalue(charname), "CustomNames: Can't remove char from btag (name is a secret value)")
+		assert(not issecretvalue(btag), "CustomNames: Can't remove char from btag (btag is a secret value)")
+	end
+	if canaccessvalue then
+		assert(canaccessvalue(charname), "CustomNames: Can't remove char from btag (no access to value)")
+		assert(canaccessvalue(btag), "CustomNames: Can't remove char from btag (no access to value)")
+	end
+	assert(charname, "CustomNames: Can't remove char from btag (charname is nil)")
+	assert(btag, "CustomNames: Can't remove char from btag (btag is nil)")
+	local wasLinked = BnetDB[btag] and BnetDB[btag].chars and BnetDB[btag].chars[charname]
+	if not wasLinked and CharToBnetDB[charname] ~= btag then return false end
+	if CharToBnetDB[charname] == btag then
+		CharToBnetDB[charname] = nil
+	end
+	if BnetDB[btag] and BnetDB[btag].chars then
+		BnetDB[btag].chars[charname] = nil
+	end
+	if BnetDB[btag] and BnetDB[btag].name then
+		lib.callbacks:Fire("Name_Removed", charname)
+	end
+	return true
+end
+
+---Lets another addon fill a tab of the CustomNames window.
+---The provider is a table with any of these functions:
+---GetItems(search) -> items, countText; ShowDetail(key, pane); ShowEmpty(pane); GetFooterButtons() -> { { text, variant, onClick } };
+---GetBadge() -> number?; GetAccountDisplay(key) -> string?; OwnsKey(key) -> boolean
+---@param tabId string -- only "guild" is shown right now
+---@param provider table
+function lib.RegisterTabProvider(tabId, provider)
+	assert(type(tabId) == "string", "CustomNames: Can't register tab provider (tabId is not a string)")
+	assert(type(provider) == "table", "CustomNames: Can't register tab provider (provider is not a table)")
+	lib.tabProviders = lib.tabProviders or {}
+	lib.tabProviders[tabId] = provider
+	lib.RefreshWindow()
+end
+
+---@param tabId string
+---@return table? provider -- what was passed to lib.RegisterTabProvider
+function lib.GetTabProvider(tabId)
+	return lib.tabProviders and lib.tabProviders[tabId] or nil
+end
+
+---Rebuilds the CustomNames window if it is open, unsaved input is left alone
+function lib.RefreshWindow()
+	if private.RefreshWindow then
+		private.RefreshWindow()
+	end
+end
+
+---Opens the CustomNames window
+---@param tabId string? -- "chars", "btags" or the id of a registered tab
+function lib.OpenWindow(tabId)
+	if private.OpenWindow then
+		private.OpenWindow(tabId)
+	end
+end
+
+---Returns the helpers the window builds its right side with, so a tab provider looks like the rest of the window.
+---Only valid while the window is open
+---@return table toolkit
+function lib.GetUIToolkit()
+	return private.DetailPane and private.DetailPane.Toolkit
 end
 ---lib.set but for btags
 ---@param btag string

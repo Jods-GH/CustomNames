@@ -27,6 +27,12 @@ private.GetDisplayName = function(key)
     if key == private.SELF_BTAG then
         return private.getLocalisation("SelfBattleTag")
     end
+    -- accounts of guildmates that didn't share their btag get their name from CustomNames_GuildSync
+    local provider = lib.GetTabProvider("guild")
+    local display = provider and provider.GetAccountDisplay and provider.GetAccountDisplay(key)
+    if display then
+        return display
+    end
     return key
 end
 

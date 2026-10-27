@@ -11,6 +11,10 @@ local COLUMNS_LAYOUT = "CustomNames-Columns"
 local DOCK_LAYOUT = "CustomNames-Dock"
 local TAB_CHARS = "chars"
 local TAB_BTAGS = "btags"
+local TAB_GUILD = "guild" -- filled by CustomNames_GuildSync through lib.RegisterTabProvider
+local GUILD_ADDON = "CustomNames_GuildSync"
+local GUILD_ADDON_URL = "https://www.curseforge.com/wow/addons/customname-guildsync"
+local GUILD_KEY_PREFIX = "GuildSync#" -- anonymous accounts of guildmates, only shown on the guild tab
 local KIND_CHAR = "char"
 local KIND_BTAG = "btag"
 -- what the right side of the window shows
@@ -45,7 +49,53 @@ local state = {
     revealKey = nil, -- entry the next refresh has to bring into view
     refreshPending = false,
     refreshDetail = false,
+    footerFor = nil, -- tab and provider the footer buttons were built for
 }
+
+local RefreshFooter -- defined once the buttons can be built
+
+---@return table? provider -- what CustomNames_GuildSync registered for the guild tab
+local function GetGuildProvider()
+    return lib.GetTabProvider(TAB_GUILD)
+end
+
+---@param key string
+---@return boolean -- the key is shown on the guild tab
+local function IsGuildKey(key)
+    if key:sub(1, #GUILD_KEY_PREFIX) == GUILD_KEY_PREFIX then return true end
+    local provider = GetGuildProvider()
+    return provider and provider.OwnsKey and provider.OwnsKey(key) and true or false
+end
+
+---@return string stateKey -- localisation key telling what keeps the guild tab from working
+---@return string? url
+local function GetGuildInstallState()
+    if not C_AddOns.DoesAddOnExist(GUILD_ADDON) then
+        return "GuildInstallMissing", GUILD_ADDON_URL
+    end
+    if C_AddOns.GetAddOnEnableState(GUILD_ADDON, UnitName("player")) == 0 then
+        return "GuildInstallDisabled"
+    end
+    if not C_AddOns.IsAddOnLoaded(GUILD_ADDON) then
+        return "GuildInstallReload"
+    end
+    return "GuildInstallOutdated" -- loaded but never registered, CustomNames or the plugin is too old
+end
+
+---@return table tabs -- for the tabs widget
+local function BuildTabs()
+    local guildText = private.getLocalisation("TabGuild")
+    local provider = GetGuildProvider()
+    local badge = provider and provider.GetBadge and provider.GetBadge()
+    if badge and badge > 0 then
+        guildText = guildText .. " " .. Theme.Colorize("(" .. badge .. ")", Theme.colors.accent)
+    end
+    return {
+        { value = TAB_CHARS, text = private.getLocalisation("TabCharacters") },
+        { value = TAB_BTAGS, text = private.getLocalisation("TabBattleTags") },
+        { value = TAB_GUILD, text = guildText },
+    }
+end
 
 -- lets escape close the window, the global only exists while the window is open
 tinsert(UISpecialFrames, GLOBAL_FRAME_NAME)
@@ -150,7 +200,7 @@ local function GetEntries()
         local bnetList = private.GetBnetList()
         bnetList[private.SELF_BTAG] = bnetList[private.SELF_BTAG] or { chars = {} }
         for btag, value in pairs(bnetList) do
-            if value.name or btag == private.SELF_BTAG then
+            if (value.name or btag == private.SELF_BTAG) and btag:sub(1, #GUILD_KEY_PREFIX) ~= GUILD_KEY_PREFIX then
                 local entry = BuildBattleTagEntry(btag, value)
                 local matches = MatchesSearch(state.search, btag, entry.display, value.name)
                 if not matches then
@@ -235,7 +285,27 @@ local function BuildItem(entry)
     }
 end
 
+local function RefreshGuildList()
+    local list = widgets.list
+    local provider = GetGuildProvider()
+    local items, countText = {}, ""
+    if provider and provider.GetItems then
+        items, countText = provider.GetItems(state.search)
+    end
+    list:SetItems(items or {})
+    list:SetEmptyText(private.getLocalisation(provider and "GuildListEmpty" or "GuildListMissing"))
+    list:SetSelected(state.mode == MODE_ENTRY and state.selected[state.tab] or nil, true)
+    state.countText = countText or ""
+    if not state.noticeActive then
+        ShowCount()
+    end
+end
+
 local function RefreshList()
+    if state.tab == TAB_GUILD then
+        RefreshGuildList()
+        return
+    end
     local list = widgets.list
     local entries, shown, total = GetEntries()
     local items = {}
@@ -256,8 +326,29 @@ local function RefreshList()
     end
 end
 
+local function RefreshGuildDetail()
+    local provider = GetGuildProvider()
+    if not provider then
+        DetailPane.ShowGuildInstall(GetGuildInstallState())
+        return
+    end
+    local key = state.selected[TAB_GUILD]
+    if key and widgets.list:HasKey(key) and provider.ShowDetail then
+        provider.ShowDetail(key, DetailPane.Toolkit)
+    else
+        state.selected[TAB_GUILD] = nil
+        if provider.ShowEmpty then
+            provider.ShowEmpty(DetailPane.Toolkit)
+        else
+            DetailPane.ShowEmpty()
+        end
+    end
+end
+
 local function RefreshDetail()
-    if state.mode == MODE_ADD then
+    if state.tab == TAB_GUILD then
+        RefreshGuildDetail()
+    elseif state.mode == MODE_ADD then
         DetailPane.ShowAdd(state.tab == TAB_BTAGS and KIND_BTAG or KIND_CHAR)
     elseif state.mode == MODE_IMPORT then
         DetailPane.ShowImport()
@@ -287,7 +378,14 @@ local function ScheduleRefresh(detail)
         state.refreshDetail = false
         if not window then return end
 
-        widgets.tabs:SetSelected(state.tab)
+        -- the guild tab shows how many guildmates wait for an answer, the tabs are only rebuilt when that changes
+        local tabs = BuildTabs()
+        if tabs[3].text ~= state.guildTabText then
+            state.guildTabText = tabs[3].text
+            widgets.tabs:SetTabs(tabs)
+        end
+        widgets.tabs:SetSelected(state.tab, true)
+        RefreshFooter()
         RefreshList()
         local revealKey = state.revealKey
         state.revealKey = nil
@@ -310,7 +408,11 @@ end
 
 ---@param key string -- entry that gets selected and brought into view by the next refresh
 local function SelectKey(key)
-    state.tab = IsBattleTagKey(key) and TAB_BTAGS or TAB_CHARS
+    if IsGuildKey(key) then
+        state.tab = TAB_GUILD
+    else
+        state.tab = IsBattleTagKey(key) and TAB_BTAGS or TAB_CHARS
+    end
     state.mode = MODE_ENTRY
     state.selected[state.tab] = key
     state.revealKey = key
@@ -337,6 +439,13 @@ local detailHandlers = {
         SelectKey(key)
         ScheduleRefresh(true)
     end,
+    -- tab providers select their own keys, which may look like btags
+    OnSelectInTab = function(key)
+        state.mode = MODE_ENTRY
+        state.selected[state.tab] = key
+        state.revealKey = key
+        ScheduleRefresh(true)
+    end,
     OnCancel = function()
         state.mode = MODE_ENTRY
         ScheduleRefresh(true)
@@ -353,6 +462,48 @@ local function AddButton(parent, textKey, variant, onClick)
     button:SetText(private.getLocalisation(textKey))
     button:SetCallback("OnClick", onClick)
     parent:AddChild(button)
+end
+
+---Fills the footer with the actions of the selected tab, it is only rebuilt when the tab or the provider changes
+RefreshFooter = function()
+    local footer = widgets.footer
+    local provider = state.tab == TAB_GUILD and GetGuildProvider() or nil
+    local footerFor = state.tab == TAB_GUILD and (provider or TAB_GUILD) or TAB_CHARS
+    if state.footerFor == footerFor then return end
+    state.footerFor = footerFor
+
+    footer:PauseLayout()
+    footer:ReleaseChildren()
+    if state.tab ~= TAB_GUILD then
+        AddButton(footer, "AddName", "primary", function()
+            ShowForm(MODE_ADD)
+        end)
+        AddButton(footer, "Import", "ghost", function()
+            ShowForm(MODE_IMPORT)
+        end)
+        AddButton(footer, "Export", "ghost", function()
+            ShowForm(MODE_EXPORT)
+        end)
+    elseif provider and provider.GetFooterButtons then
+        for _, info in ipairs(provider.GetFooterButtons() or {}) do
+            local button = AceGUI:Create("CustomNames-Button")
+            button:SetVariant(info.variant or "ghost")
+            button:SetText(info.text)
+            button:SetCallback("OnClick", info.onClick)
+            footer:AddChild(button)
+        end
+    end
+
+    local notice = AceGUI:Create("Label")
+    notice:SetFontObject(Theme.fonts.small)
+    notice:SetJustifyH("RIGHT")
+    notice:SetUserData("flex", 1)
+    footer:AddChild(notice)
+    widgets.notice = notice
+    footer:ResumeLayout()
+    footer:DoLayout()
+    state.noticeActive = false
+    ShowCount()
 end
 
 ---@param dock string
@@ -406,14 +557,14 @@ local function CreateWindow()
     window:AddChild(topBar)
 
     local tabs = AceGUI:Create("CustomNames-Tabs")
-    tabs:SetTabs({
-        { value = TAB_CHARS, text = private.getLocalisation("TabCharacters") },
-        { value = TAB_BTAGS, text = private.getLocalisation("TabBattleTags") },
-    })
+    local tabList = BuildTabs()
+    state.guildTabText = tabList[3].text
+    tabs:SetTabs(tabList)
     tabs:SetSelected(state.tab, true)
     tabs:SetCallback("OnTabSelected", function(_, _, tab)
         state.tab = tab
         state.mode = MODE_ENTRY
+        RefreshFooter()
         RefreshList()
         RefreshDetail()
     end)
@@ -439,23 +590,9 @@ local function CreateWindow()
     -- actions that don't belong to a single name, and the place for notices
     local footer = CreateBar("BOTTOM", variables.footerPadding, "TOP")
     window:AddChild(footer)
-
-    AddButton(footer, "AddName", "primary", function()
-        ShowForm(MODE_ADD)
-    end)
-    AddButton(footer, "Import", "ghost", function()
-        ShowForm(MODE_IMPORT)
-    end)
-    AddButton(footer, "Export", "ghost", function()
-        ShowForm(MODE_EXPORT)
-    end)
-
-    local notice = AceGUI:Create("Label")
-    notice:SetFontObject(Theme.fonts.small)
-    notice:SetJustifyH("RIGHT")
-    notice:SetUserData("flex", 1)
-    footer:AddChild(notice)
-    widgets.notice = notice
+    widgets.footer = footer
+    state.footerFor = nil
+    RefreshFooter()
 
     local list = AceGUI:Create("CustomNames-List")
     list:SetUserData("dock", "LEFT")
@@ -495,9 +632,15 @@ private.RefreshWindow = function()
     ScheduleRefresh()
 end
 
-private.OpenWindow = function()
+---@param tab string? -- tab to show, the last one if nil
+private.OpenWindow = function(tab)
+    if tab then
+        state.tab = tab
+        state.mode = MODE_ENTRY
+    end
     if window then
         window.frame:Raise()
+        ScheduleRefresh(true)
         return
     end
     CreateWindow()
