@@ -112,14 +112,25 @@ local function CreateEditBox(labelKey, placeholderKey)
     return editBox
 end
 
+---@param charname string
+---@param onRemove fun(charname: string)?
+---@return function? -- what the cell of the character calls when its cross is clicked
+local function BindRemove(charname, onRemove)
+    if not onRemove then return nil end
+    return function()
+        onRemove(charname)
+    end
+end
+
 ---@param chars table -- sorted list of the characters linked to a btag
+---@param onRemove fun(charname: string)? -- the cells get a cross that calls this
 ---@return table groups -- for the character grid, one group per realm
-local function BuildCharacterGroups(chars)
+local function BuildCharacterGroups(chars, onRemove)
     -- names on forever have no realm that they could be grouped by
     if private.IsForever() then
         local items = {}
         for index, charname in ipairs(chars) do
-            items[index] = { text = charname, classFile = private.GetClass(charname) }
+            items[index] = { text = charname, classFile = private.GetClass(charname), onRemove = BindRemove(charname, onRemove) }
         end
         return { { items = items } }
     end
@@ -129,7 +140,12 @@ local function BuildCharacterGroups(chars)
         local items = {}
         for index, name in ipairs(group.names) do
             local charname = hasRealm and (name .. "-" .. group.realm) or name
-            items[index] = { text = name, classFile = private.GetClass(charname), tooltip = charname }
+            items[index] = {
+                text = name,
+                classFile = private.GetClass(charname),
+                tooltip = charname,
+                onRemove = BindRemove(charname, onRemove),
+            }
         end
         groups[groupIndex] = { title = hasRealm and group.realm or nil, items = items }
     end
@@ -219,18 +235,26 @@ local function AddLinkCharacter(btag, doneText)
     Add(notice, variables.noticeMargin)
 end
 
----Adds a scrolling grid of characters that takes the rest of the pane
----@param chars table -- sorted list of names in the format Name-Realm
+---Adds a scrolling grid that takes the rest of the pane
+---@param groups table -- groups of the character grid, see UI/Widgets/CharacterGrid.lua
 ---@param margin number?
-local function AddCharacterGrid(chars, margin)
+local function AddGrid(groups, margin)
     local scroll = AceGUI:Create("CustomNames-Scroll")
     scroll:SetLayout(DOCK_LAYOUT)
     local grid = AceGUI:Create("CustomNames-CharacterGrid")
-    grid:SetGroups(BuildCharacterGroups(chars))
+    grid:SetGroups(groups)
     grid:SetUserData("dock", "TOP")
     scroll:AddChild(grid)
     Add(scroll, margin or variables.noticeMargin, "FILL")
     return scroll
+end
+
+---Adds a scrolling grid of characters grouped by realm that takes the rest of the pane
+---@param chars table -- sorted list of names in the format Name-Realm
+---@param margin number?
+---@param onRemove fun(charname: string)? -- the cells get a cross that calls this
+local function AddCharacterGrid(chars, margin, onRemove)
+    return AddGrid(BuildCharacterGroups(chars, onRemove), margin)
 end
 
 -- What tab providers of other addons build the right side with (see lib.RegisterTabProvider and lib.GetUIToolkit).
@@ -249,6 +273,13 @@ DetailPane.Toolkit = {
     SetNotice = SetNotice,
     BuildCharacterGroups = BuildCharacterGroups,
     AddCharacterGrid = AddCharacterGrid,
+    AddGrid = AddGrid,
+    SplitCharName = private.SplitCharName,
+    ---@param charname string -- Name-Realm
+    ---@return string? classFile -- nil if the class of the character was never seen
+    GetClass = function(charname)
+        return private.GetClass(charname)
+    end,
     ---@param text string
     ---@param variant string -- primary, ghost, danger or link
     ---@param onClick function
@@ -435,7 +466,12 @@ DetailPane.ShowEntry = function(entry)
             local text = private.getLocalisation("NoLinkedCharacters")
             Add(CreateLabel(text, "small", Theme.colors.muted), variables.noticeMargin)
         else
-            AddCharacterGrid(entry.chars)
+            AddCharacterGrid(entry.chars, nil, function(charname)
+                -- remembered, so a friend coming online on that character doesn't link it again
+                lib.RemoveCharFromBtag(charname, key, true)
+                pendingNotice = { key = key, slot = SLOT_LINK, text = private.getLocalisation("CharacterUnlinked"):format(charname) }
+                handlers.OnChanged(key)
+            end)
         end
     end
 

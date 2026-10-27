@@ -52,6 +52,7 @@ if L then
     L["LinkCharacterPlaceholder"] = "Name-Realm"
     L["LinkCharacter"] = "Add character"
     L["CharacterLinked"] = "%s added"
+    L["CharacterUnlinked"] = "%s removed"
     L["ErrorLinkNeedsCharacter"] = "Enter a character as Name-Realm."
     L["ErrorAlreadyLinked"] = "%s is already linked to this BattleTag."
     L["ErrorLinkedElsewhere"] = "%s is already linked to %s."

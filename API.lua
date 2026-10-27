@@ -10,7 +10,8 @@ CustomNamesDB = CustomNamesDB or {}
 CustomNamesDB.CharDB = CustomNamesDB.CharDB or {}
 CustomNamesDB.BnetDB = CustomNamesDB.BnetDB or {}
 CustomNamesDB.CharToBnetDB = CustomNamesDB.CharToBnetDB or {}
-local CharDB,BnetDB,CharToBnetDB
+CustomNamesDB.UnlinkedDB = CustomNamesDB.UnlinkedDB or {}
+local CharDB,BnetDB,CharToBnetDB,UnlinkedDB
 local loadedFrame = CreateFrame("Frame");
 loadedFrame:RegisterEvent("ADDON_LOADED");
 loadedFrame:SetScript("OnEvent", function(self, event, addon)
@@ -19,6 +20,7 @@ loadedFrame:SetScript("OnEvent", function(self, event, addon)
 			CharDB = CustomNamesDB.CharDB
 			BnetDB = CustomNamesDB.BnetDB
 			CharToBnetDB = CustomNamesDB.CharToBnetDB
+			UnlinkedDB = CustomNamesDB.UnlinkedDB
 		end
 	end
 end)
@@ -231,7 +233,9 @@ function  lib.AddCharToBtag(charname,btag)
 	end
 	assert(charname, "CustomNames: Can't add char to btag (charname is nil)")
 	assert(btag, "CustomNames: Can't add char to btag (btag is nil)")
-	CharToBnetDB[charname] = btag	
+	CharToBnetDB[charname] = btag
+	-- linking a character on purpose undoes an earlier removal
+	UnlinkedDB[charname] = nil
 	BnetDB[btag] = BnetDB[btag] or {}
 	BnetDB[btag].chars = BnetDB[btag].chars or {}
 	BnetDB[btag].chars[charname] = true
@@ -241,11 +245,12 @@ function  lib.AddCharToBtag(charname,btag)
 	return true
 end
 
----removes the link between a character name and a btag
+---removes the link between a character name and a btag. Fires Char_Unlinked(charname, btag)
 ---@param charname string
 ---@param btag string
+---@param keepUnlinked boolean? -- the user removed it, CustomNames won't link it to that btag again on its own (bnet friends)
 ---@return boolean success -- false if the character wasn't linked to that btag
-function lib.RemoveCharFromBtag(charname,btag)
+function lib.RemoveCharFromBtag(charname,btag,keepUnlinked)
 	if issecretvalue then
 		assert(not issecretvalue(charname), "CustomNames: Can't remove char from btag (name is a secret value)")
 		assert(not issecretvalue(btag), "CustomNames: Can't remove char from btag (btag is a secret value)")
@@ -264,10 +269,22 @@ function lib.RemoveCharFromBtag(charname,btag)
 	if BnetDB[btag] and BnetDB[btag].chars then
 		BnetDB[btag].chars[charname] = nil
 	end
+	if keepUnlinked then
+		UnlinkedDB[charname] = btag
+	end
 	if BnetDB[btag] and BnetDB[btag].name then
 		lib.callbacks:Fire("Name_Removed", charname)
 	end
+	lib.callbacks:Fire("Char_Unlinked", charname, btag)
 	return true
+end
+
+---returns true if the user removed the character from that btag, CustomNames doesn't link it there again on its own
+---@param charname string
+---@param btag string
+---@return boolean
+function lib.IsCharUnlinked(charname,btag)
+	return UnlinkedDB[charname] == btag
 end
 
 ---Lets another addon fill a tab of the CustomNames window.

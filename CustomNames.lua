@@ -26,7 +26,7 @@ local function ProcessGameAccount(battleTag, gameAccountInfo)
 		Character = private.FixNameForever(Character)
 	end
 	if not Character then return end
-	if not lib.IsInBnetDatabase(Character) then
+	if not lib.IsInBnetDatabase(Character) and not lib.IsCharUnlinked(Character, battleTag) then
 		lib.AddCharToBtag(Character,battleTag)
 	end
 	private.RememberClassID(Character, gameAccountInfo.classID)
@@ -64,7 +64,7 @@ frame:SetScript("OnEvent",function(self,...)
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		local name,realm = UnitFullName("player")
 		local fullName = name.."-"..realm
-		if not lib.IsInBnetDatabase(fullName) then
+		if not lib.IsInBnetDatabase(fullName) and not lib.IsCharUnlinked(fullName, "self") then
 			lib.AddCharToBtag(fullName, "self")
 		end
 		private.RememberPlayerAndGroupClass()
