@@ -15,6 +15,7 @@ local TAB_GUILD = "guild" -- filled by CustomNames_GuildSync through lib.Registe
 local GUILD_ADDON = "CustomNames_GuildSync"
 local GUILD_ADDON_URL = "https://www.curseforge.com/wow/addons/customname-guildsync"
 local GUILD_KEY_PREFIX = "GuildSync#" -- anonymous accounts of guildmates, only shown on the guild tab
+local TAB_PLUGINS = "plugins" -- filled from Data/Plugins.lua
 local KIND_CHAR = "char"
 local KIND_BTAG = "btag"
 -- what the right side of the window shows
@@ -50,6 +51,7 @@ local state = {
     refreshPending = false,
     refreshDetail = false,
     footerFor = nil, -- tab and provider the footer buttons were built for
+    plugins = {}, -- [addon] = item of private.GetRelevantPlugins, as the plugins tab shows them
 }
 
 local RefreshFooter -- defined once the buttons can be built
@@ -70,31 +72,43 @@ end
 ---@return string stateKey -- localisation key telling what keeps the guild tab from working
 ---@return string? url
 local function GetGuildInstallState()
-    if not C_AddOns.DoesAddOnExist(GUILD_ADDON) then
+    local addOnState = private.GetAddOnState(GUILD_ADDON)
+    if addOnState == "missing" then
         return "GuildInstallMissing", GUILD_ADDON_URL
-    end
-    if C_AddOns.GetAddOnEnableState(GUILD_ADDON, UnitName("player")) == 0 then
+    elseif addOnState == "disabled" then
         return "GuildInstallDisabled"
-    end
-    if not C_AddOns.IsAddOnLoaded(GUILD_ADDON) then
+    elseif addOnState == "reload" then
         return "GuildInstallReload"
     end
     return "GuildInstallOutdated" -- loaded but never registered, CustomNames or the plugin is too old
 end
 
----@return table tabs -- for the tabs widget
-local function BuildTabs()
-    local guildText = private.getLocalisation("TabGuild")
-    local provider = GetGuildProvider()
-    local badge = provider and provider.GetBadge and provider.GetBadge()
+---@param textKey string -- localisation key of the tab
+---@param badge number?
+---@return string text
+local function TabText(textKey, badge)
+    local text = private.getLocalisation(textKey)
     if badge and badge > 0 then
-        guildText = guildText .. " " .. Theme.Colorize("(" .. badge .. ")", Theme.colors.accent)
+        text = text .. " " .. Theme.Colorize("(" .. badge .. ")", Theme.colors.accent)
     end
-    return {
+    return text
+end
+
+---@return table tabs -- for the tabs widget
+---@return string signature -- changes whenever one of the texts changes
+local function BuildTabs()
+    local provider = GetGuildProvider()
+    local tabs = {
         { value = TAB_CHARS, text = private.getLocalisation("TabCharacters") },
         { value = TAB_BTAGS, text = private.getLocalisation("TabBattleTags") },
-        { value = TAB_GUILD, text = guildText },
+        { value = TAB_GUILD, text = TabText("TabGuild", provider and provider.GetBadge and provider.GetBadge()) },
+        { value = TAB_PLUGINS, text = TabText("TabPlugins", private.GetPluginBadge()) },
     }
+    local texts = {}
+    for index, tab in ipairs(tabs) do
+        texts[index] = tab.text
+    end
+    return tabs, table.concat(texts, "\n")
 end
 
 -- lets escape close the window, the global only exists while the window is open
@@ -301,9 +315,93 @@ local function RefreshGuildList()
     end
 end
 
+-- what the list and the right side show for each state of a plugin, order is the position in the list
+local pluginStates = {
+    disabled = { order = 1, valueKey = "PluginDisabled", color = Theme.colors.muted, textKey = "PluginStateDisabled" },
+    reload = { order = 2, valueKey = "PluginReload", color = Theme.colors.muted, textKey = "PluginStateReload" },
+    missing = { order = 3, valueKey = "PluginMissing", color = Theme.colors.danger, textKey = "PluginStateMissing" },
+    loaded = { order = 4, valueKey = "PluginActive", color = Theme.colors.success, textKey = "PluginStateActive" },
+}
+local pluginBuiltIn = { order = 5, valueKey = "PluginBuiltIn", color = Theme.colors.success, textKey = "PluginStateBuiltIn" }
+
+---@param item table -- of private.GetRelevantPlugins
+---@return table info -- of pluginStates
+local function GetPluginStateInfo(item)
+    return item.entry.builtIn and pluginBuiltIn or pluginStates[item.state]
+end
+
+local function RefreshPluginList()
+    local list = widgets.list
+    local plugins = {}
+    local active, total = 0, 0
+    state.plugins = {}
+    for _, item in ipairs(private.GetRelevantPlugins()) do
+        total = total + 1
+        if item.entry.builtIn or item.state == "loaded" then
+            active = active + 1
+        end
+        state.plugins[item.entry.addon] = item
+        if MatchesSearch(state.search, item.entry.title, item.entry.addon) then
+            item.suggested = private.IsPluginSuggested(item)
+            table.insert(plugins, item)
+        end
+    end
+    table.sort(plugins, function(a, b)
+        local aInfo, bInfo = GetPluginStateInfo(a), GetPluginStateInfo(b)
+        if aInfo.order ~= bInfo.order then
+            return aInfo.order < bInfo.order
+        end
+        if a.dismissed ~= b.dismissed then
+            return b.dismissed
+        end
+        return a.entry.title:lower() < b.entry.title:lower()
+    end)
+
+    local items = {}
+    for index, item in ipairs(plugins) do
+        local entry = item.entry
+        local info = GetPluginStateInfo(item)
+        local subtitle
+        if entry.builtIn then
+            subtitle = private.getLocalisation("PluginSupportsItself")
+        elseif entry.requires then
+            subtitle = private.getLocalisation("PluginForAddon"):format(table.concat(entry.requires, ", "))
+        else
+            subtitle = private.getLocalisation("PluginDefaultUI")
+        end
+        items[index] = {
+            key = entry.addon,
+            title = entry.title,
+            subtitle = subtitle,
+            value = private.getLocalisation(info.valueKey),
+            -- plugins the player doesn't want suggested don't stand out
+            valueColor = item.dismissed and info ~= pluginBuiltIn and item.state ~= "loaded" and Theme.colors.disabled or info.color,
+        }
+    end
+    -- the first plugin that is suggested is shown right away
+    if not state.selected[TAB_PLUGINS] then
+        for _, item in ipairs(plugins) do
+            if item.suggested then
+                state.selected[TAB_PLUGINS] = item.entry.addon
+                break
+            end
+        end
+    end
+    list:SetItems(items)
+    list:SetEmptyText(private.getLocalisation(state.search == "" and "PluginsEmpty" or "ListNoMatches"))
+    list:SetSelected(state.selected[TAB_PLUGINS], true)
+    state.countText = private.getLocalisation("PluginsCount"):format(active, total)
+    if not state.noticeActive then
+        ShowCount()
+    end
+end
+
 local function RefreshList()
     if state.tab == TAB_GUILD then
         RefreshGuildList()
+        return
+    elseif state.tab == TAB_PLUGINS then
+        RefreshPluginList()
         return
     end
     local list = widgets.list
@@ -345,9 +443,23 @@ local function RefreshGuildDetail()
     end
 end
 
+local function RefreshPluginDetail()
+    local key = state.selected[TAB_PLUGINS]
+    local item = key and widgets.list:HasKey(key) and state.plugins[key]
+    if item then
+        local info = GetPluginStateInfo(item)
+        DetailPane.ShowPlugin(item, private.getLocalisation(info.valueKey), info.color, private.getLocalisation(info.textKey))
+    else
+        state.selected[TAB_PLUGINS] = nil
+        DetailPane.ShowEmpty("PluginsHint")
+    end
+end
+
 local function RefreshDetail()
     if state.tab == TAB_GUILD then
         RefreshGuildDetail()
+    elseif state.tab == TAB_PLUGINS then
+        RefreshPluginDetail()
     elseif state.mode == MODE_ADD then
         DetailPane.ShowAdd(state.tab == TAB_BTAGS and KIND_BTAG or KIND_CHAR)
     elseif state.mode == MODE_IMPORT then
@@ -378,10 +490,10 @@ local function ScheduleRefresh(detail)
         state.refreshDetail = false
         if not window then return end
 
-        -- the guild tab shows how many guildmates wait for an answer, the tabs are only rebuilt when that changes
-        local tabs = BuildTabs()
-        if tabs[3].text ~= state.guildTabText then
-            state.guildTabText = tabs[3].text
+        -- the guild and plugins tabs show counts, the tabs are only rebuilt when those change
+        local tabs, signature = BuildTabs()
+        if signature ~= state.tabsSignature then
+            state.tabsSignature = signature
             widgets.tabs:SetTabs(tabs)
         end
         widgets.tabs:SetSelected(state.tab, true)
@@ -468,13 +580,19 @@ end
 RefreshFooter = function()
     local footer = widgets.footer
     local provider = state.tab == TAB_GUILD and GetGuildProvider() or nil
-    local footerFor = state.tab == TAB_GUILD and (provider or TAB_GUILD) or TAB_CHARS
+    local footerFor = TAB_CHARS ---@type string|table
+    if state.tab == TAB_GUILD then
+        footerFor = provider or TAB_GUILD
+    elseif state.tab == TAB_PLUGINS then
+        footerFor = TAB_PLUGINS
+    end
     if state.footerFor == footerFor then return end
     state.footerFor = footerFor
 
     footer:PauseLayout()
     footer:ReleaseChildren()
-    if state.tab ~= TAB_GUILD then
+    -- the plugins tab has nothing to do for all plugins at once, its footer only shows the count
+    if footerFor == TAB_CHARS then
         AddButton(footer, "AddName", "primary", function()
             ShowForm(MODE_ADD)
         end)
@@ -557,8 +675,8 @@ local function CreateWindow()
     window:AddChild(topBar)
 
     local tabs = AceGUI:Create("CustomNames-Tabs")
-    local tabList = BuildTabs()
-    state.guildTabText = tabList[3].text
+    local tabList
+    tabList, state.tabsSignature = BuildTabs()
     tabs:SetTabs(tabList)
     tabs:SetSelected(state.tab, true)
     tabs:SetCallback("OnTabSelected", function(_, _, tab)

@@ -109,6 +109,26 @@ if L then
     L["GuildInstallOutdated"] = "CustomNames_GuildSync is loaded but could not connect to CustomNames. Update both addons."
     L["GuildInstallUrlLabel"] = "Download"
 
+    -- plugins tab
+    L["TabPlugins"] = "Plugins"
+    L["PluginsCount"] = "%d of %d working"
+    L["PluginsEmpty"] = "No plugins for your addons."
+    L["PluginsHint"] = "Select a plugin on the left.\n\nThese addons show custom names in other parts of the game."
+    L["PluginForAddon"] = "for %s"
+    L["PluginDefaultUI"] = "for the default UI"
+    L["PluginSupportsItself"] = "supports CustomNames itself"
+    L["PluginActive"] = "Active"
+    L["PluginBuiltIn"] = "Built in"
+    L["PluginMissing"] = "Missing"
+    L["PluginDisabled"] = "Disabled"
+    L["PluginReload"] = "Reload"
+    L["PluginStateActive"] = "Installed and working."
+    L["PluginStateBuiltIn"] = "%s shows custom names on its own, there is nothing to install."
+    L["PluginStateMissing"] = "Not installed. Get it from the address below."
+    L["PluginStateDisabled"] = "Installed but disabled. Enable it in the AddOn list and reload your interface."
+    L["PluginStateReload"] = "Enabled but not loaded yet. Type /reload to load it."
+    L["PluginDismiss"] = "Don't suggest this plugin"
+
     -- settings panel
     L["SettingsDescription"] = "Manage custom names for characters and BattleTags."
     L["OpenWindow"] = "Open CustomNames"

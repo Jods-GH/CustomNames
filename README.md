@@ -20,6 +20,22 @@ The chat commands still work:
 /cn del Name
 /cn list
 ```
+# Plugins
+The **Plugins** tab of the window lists the plugins and addons that show custom names in other parts of the game. It only shows the ones that fit your setup: plugins for the default UI, plugins for addons you have enabled, and addons that support CustomNames on their own. Each entry shows whether it is active, missing, disabled or waiting for a reload. Missing plugins come with a download address and count towards the badge on the tab, unless you tick **Don't suggest this plugin**.
+
+## Adding your addon
+Open a pull request that adds an entry to `Data/Plugins.lua`:
+```lua
+{
+    addon = "MyAddon_CustomNames",   -- folder name of the plugin, or of your addon if it supports CustomNames itself
+    title = "MyAddon",               -- shown in the list
+    description = "Shows custom names in MyAddon.", -- one or two sentences in English
+    requires = { "MyAddon" },        -- addons the plugin is for, leave it out for plugins of the default UI
+    url = "https://www.curseforge.com/wow/addons/myaddon-customnames", -- download address of the plugin
+},
+-- or, if your addon uses CustomNames without a plugin:
+{ addon = "MyAddon", title = "MyAddon", builtIn = true, description = "Shows custom names in MyAddon." },
+```
 # Usage 
 ```lua
 local Lib = LibStub("CustomNames")

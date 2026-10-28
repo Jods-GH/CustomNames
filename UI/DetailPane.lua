@@ -329,6 +329,21 @@ DetailPane.Toolkit = {
     end,
 }
 
+---Adds a box with the address an addon can be downloaded from, the game can't open links so it is offered for copying
+---@param url string
+local function AddCopyUrl(url)
+    local urlBox = Add(CreateEditBox("GuildInstallUrlLabel"), variables.sectionMargin)
+    urlBox:SetText(url)
+    urlBox:SetCallback("OnTextChanged", function()
+        urlBox:SetText(url)
+        urlBox:HighlightText()
+    end)
+    urlBox:SetCallback("OnEnterPressed", function()
+        AceGUI:ClearFocus()
+    end)
+    Add(CreateLabel(private.getLocalisation("ExportHint"), "small", Theme.colors.disabled), variables.noticeMargin)
+end
+
 ---Shown on the guild tab while CustomNames_GuildSync isn't loaded
 ---@param stateKey string -- localisation key of the text that says what is missing
 ---@param url string? -- where the addon can be downloaded
@@ -337,17 +352,34 @@ DetailPane.ShowGuildInstall = function(stateKey, url)
     AddHeader(private.getLocalisation("GuildInstallTitle"))
     Add(CreateLabel(private.getLocalisation(stateKey), "body", Theme.colors.muted), variables.fieldMargin)
     if url then
-        -- the game can't open links, so the address is offered for copying
-        local urlBox = Add(CreateEditBox("GuildInstallUrlLabel"), variables.sectionMargin)
-        urlBox:SetText(url)
-        urlBox:SetCallback("OnTextChanged", function()
-            urlBox:SetText(url)
-            urlBox:HighlightText()
+        AddCopyUrl(url)
+    end
+    Finish()
+end
+
+---Shown on the plugins tab for the selected plugin
+---@param item table -- { entry = of private.Plugins, state = string, dismissed = boolean }
+---@param stateText string -- short state, shown in the caption
+---@param stateColor table -- one of Theme.colors
+---@param stateHint string -- what the state means for the player
+DetailPane.ShowPlugin = function(item, stateText, stateColor, stateHint)
+    local entry = item.entry
+    Begin("plugin:" .. entry.addon .. ":" .. item.state)
+    AddHeader(entry.title, entry.addon .. variables.separator .. stateText)
+    Add(CreateLabel(entry.description, "body"), variables.fieldMargin)
+    Add(CreateLabel(stateHint:format(entry.title), "body", stateColor), variables.groupMargin)
+    if item.state == "missing" and entry.url then
+        AddCopyUrl(entry.url)
+    end
+    if not entry.builtIn and item.state ~= "loaded" then
+        local toggle = AceGUI:Create("CustomNames-Toggle")
+        toggle:SetLabel(private.getLocalisation("PluginDismiss"))
+        toggle:SetValue(item.dismissed)
+        toggle:SetCallback("OnValueChanged", function(_, _, value)
+            private.SetPluginDismissed(entry.addon, value)
+            handlers.OnChanged(nil, true)
         end)
-        urlBox:SetCallback("OnEnterPressed", function()
-            AceGUI:ClearFocus()
-        end)
-        Add(CreateLabel(private.getLocalisation("ExportHint"), "small", Theme.colors.disabled), variables.noticeMargin)
+        Add(toggle, variables.sectionMargin)
     end
     Finish()
 end
@@ -372,9 +404,11 @@ DetailPane.IsEditing = function()
     return editing
 end
 
-DetailPane.ShowEmpty = function()
-    Begin("empty")
-    local hint = CreateLabel(private.getLocalisation("DetailEmpty"), "body", Theme.colors.muted)
+---@param textKey string? -- localisation key of the hint, the one of the name tabs if nil
+DetailPane.ShowEmpty = function(textKey)
+    textKey = textKey or "DetailEmpty"
+    Begin("empty:" .. textKey)
+    local hint = CreateLabel(private.getLocalisation(textKey), "body", Theme.colors.muted)
     hint:SetJustifyH("CENTER")
     Add(hint, variables.emptyMargin)
     Finish()

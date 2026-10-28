@@ -45,6 +45,10 @@ Locales\Locales.lua
 Util\NameUtil.lua
 Util\ClassCache.lua
 Util\ImportExport.lua
+Util\AddOnState.lua
+
+#data
+Data\Plugins.lua
 
 #ui
 UI\Theme.lua
