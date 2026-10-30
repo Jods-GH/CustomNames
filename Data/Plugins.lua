@@ -98,4 +98,10 @@ private.Plugins = {
         builtIn = true,
         description = "Shows custom names in its Mythic+ additions.",
     },
+     {
+        addon = "EllesmereUI",
+        title = "EllesmereUI",
+        builtIn = true,
+        description = "Shows custom names in EllesmereUI unit frames.",
+    },
 }
