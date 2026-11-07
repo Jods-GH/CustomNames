@@ -5,6 +5,7 @@
 ## Author: Jods
 ## SavedVariables: CustomNamesDB, CustomNames
 ## OptionalDeps: Ace3
+## IconTexture: Interface\AddOns\CustomNames\Media\Logo.tga
 ## AddonCompartmentFunc: CustomNames_AddonCompartmentFunction
 ## X-Curse-Project-ID: 867373
 ## X-Wago-ID: QKyww7N7
