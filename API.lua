@@ -1,28 +1,32 @@
 local appName, private = ...
 local MAJOR_VERSION = "CustomNames"
-local MINOR_VERSION = 6
+local MINOR_VERSION = 7
 if not LibStub then error(MAJOR_VERSION .. " requires LibStub.") end
 ---@class CustomNames
 local lib = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 lib.callbacks = lib.callbacks or LibStub("CallbackHandler-1.0"):New(lib)
 if not lib then error("CustomNames failed to initialise")return end
-CustomNamesDB = CustomNamesDB or {}
-CustomNamesDB.CharDB = CustomNamesDB.CharDB or {}
-CustomNamesDB.BnetDB = CustomNamesDB.BnetDB or {}
-CustomNamesDB.CharToBnetDB = CustomNamesDB.CharToBnetDB or {}
-CustomNamesDB.UnlinkedDB = CustomNamesDB.UnlinkedDB or {}
 local CharDB,BnetDB,CharToBnetDB,UnlinkedDB
-local loadedFrame = CreateFrame("Frame");
-loadedFrame:RegisterEvent("ADDON_LOADED");
+
+--- SavedVariables are loaded after this file ran and replace CustomNamesDB,
+--- so missing tables can only be filled in once ADDON_LOADED fired
+---@param key string
+---@return table
+local function GetOrCreateDB(key)
+	CustomNamesDB[key] = CustomNamesDB[key] or {}
+	return CustomNamesDB[key]
+end
+
+local loadedFrame = CreateFrame("Frame")
+loadedFrame:RegisterEvent("ADDON_LOADED")
 loadedFrame:SetScript("OnEvent", function(self, event, addon)
-  	if(event == "ADDON_LOADED") then
-		if(addon == MAJOR_VERSION) then
-			CharDB = CustomNamesDB.CharDB
-			BnetDB = CustomNamesDB.BnetDB
-			CharToBnetDB = CustomNamesDB.CharToBnetDB
-			UnlinkedDB = CustomNamesDB.UnlinkedDB
-		end
-	end
+	if addon ~= MAJOR_VERSION then return end
+	CustomNamesDB = CustomNamesDB or {}
+	CharDB = GetOrCreateDB("CharDB")
+	BnetDB = GetOrCreateDB("BnetDB")
+	CharToBnetDB = GetOrCreateDB("CharToBnetDB")
+	UnlinkedDB = GetOrCreateDB("UnlinkedDB")
+	self:UnregisterEvent("ADDON_LOADED")
 end)
 
 private.IsForever = function()
