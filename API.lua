@@ -145,8 +145,7 @@ function lib.isInDatabase(name)
 	end
 	if name == "self" or name == private.GetOwnBattleTag() then
 		nameToCheck = "self"
-	elseif not (name:match( "^.-%-.-$") or name:match("^%w+#%d+$")) then -- add realm if it isn't in btag format and doesn't exist
-		assert(not private.IsForever(), "CustomNames: Can't Get Custom Name (name is not in one of the formats Firstname-Lastname or BattleTag#12345)")	
+	elseif not (name:match( "^.-%-.-$") or name:match("^%w+#%d+$")) and not private.IsForever() then -- add realm if it isn't in btag format and doesn't exist (Forever names can be a single word, e.g. player pets)
 		nameToCheck = name .. "-" .. NormalizedRealmName()
 	end
 	if CharDB[nameToCheck] then
@@ -380,7 +379,9 @@ function lib.Set(name, customName)
 	if issecretvalue and issecretvalue(name) or canaccessvalue and not canaccessvalue(name) then return assert(false, "CustomNames: Can't Set Custom Name (name is a secret value)") end
 	if UnitExists(name) then	
 		local unitName, unitRealm = UnitName(name)
-		if UnitIsPlayer(name) or private.IsForever() then
+		if private.IsForever() then
+			name = unitRealm and (unitName .. "-" .. unitRealm) or unitName
+		elseif UnitIsPlayer(name) then
 			name = unitName .. "-" .. (unitRealm or NormalizedRealmName())
 		else
 			name = unitName
@@ -442,7 +443,7 @@ function lib.UnitName(unit)
 	local unitName, unitRealm = UnitName(unit)
 	local nameToCheck 
 	if private.IsForever() then
-		if UnitIsPlayer(unit) and unitRealm then
+		if unitRealm then
 			nameToCheck = unitName .. "-" .. unitRealm
 		else
 			nameToCheck = unitName
@@ -468,7 +469,7 @@ function lib.UnitNameUnmodified(unit)
 	local unitName, unitRealm = UnitNameUnmodified(unit)
 	local nameToCheck 
 	if private.IsForever() then
-		if UnitIsPlayer(unit) then
+		if unitRealm then
 			nameToCheck = unitName .. "-" .. unitRealm
 		else
 			nameToCheck = unitName
@@ -494,7 +495,7 @@ function lib.UnitFullName(unit)
 	local unitName, unitRealm = UnitFullName(unit)
 	local nameToCheck 
 	if private.IsForever() then
-		if UnitIsPlayer(unit) then
+		if unitRealm then
 			nameToCheck = unitName .. "-" .. unitRealm
 		else
 			nameToCheck = unitName
@@ -520,7 +521,7 @@ function lib.GetUnitName(unit,showServerName)
 	local unitName, unitRealm = UnitFullName(unit)	
 	local nameToCheck
 	if private.IsForever() then
-		if UnitIsPlayer(unit) then
+		if unitRealm then
 			nameToCheck = unitName .. "-" .. unitRealm
 		else
 			nameToCheck = unitName
