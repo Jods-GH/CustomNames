@@ -2,6 +2,14 @@ local appName, app = ...
 ---@class CustomNamesPrivate
 local private = app
 
+-- Addons that replace a part of the default UI, by folder name. Entries name a group in replacedBy.
+-- Add your addon to a group through a pull request. Addons that only replace some of the frames
+-- (raid frames only, for example) don't belong in unitFrames, the plugin still helps with the rest
+private.AddonGroups = {
+    unitFrames = { "GW2_UI", "ElvUI", "EllesmereUIUnitFrames", "ShadowedUnitFrames", "PitBull4" },
+    nameplates = { "GW2_UI", "Plater", "ElvUI","Kui_Nameplates", "Platynator", "EllesmereUINameplates" },
+}
+
 -- Everything listed on the plugins tab of the window. Add your addon here through a pull request.
 --   addon       folder name of the addon that brings the support: the plugin, or the addon itself if builtIn is set
 --   title       shown in the list
@@ -9,6 +17,7 @@ local private = app
 --   requires    folder names of the addons the plugin is for, the entry is shown once one of them is enabled.
 --               Leave it out for plugins of the default UI. Entries with builtIn don't need it
 --   builtIn     the addon supports CustomNames on its own, there is nothing to install
+--   replacedBy  name of a group in private.AddonGroups, the entry is hidden while one of its addons is enabled
 --   url         where the plugin can be downloaded, not needed for builtIn entries
 -- The order doesn't matter, the list is sorted when it is shown.
 -- Forks of an addon get their own entry with their own folder name
@@ -31,6 +40,20 @@ private.Plugins = {
         title = "Battle.net toasts",
         description = "Shows custom names in the toasts that pop up when Battle.net friends come online.",
         url = "https://www.curseforge.com/wow/addons/customnames-bnettoast",
+    },
+    {
+        addon = "CustomNames_Blizzard",
+        title = "Blizzard unit frames",
+        replacedBy = "unitFrames",
+        description = "Shows custom names on the player, target, focus, party, raid, boss and arena frames.",
+        url = "https://www.curseforge.com/wow/addons/customnames-blizzard",
+    },
+    {
+        addon = "CustomNames_BlizzardNameplates",
+        title = "Blizzard nameplates",
+        replacedBy = "nameplates",
+        description = "Shows custom names on the default nameplates.",
+        url = "https://www.curseforge.com/wow/addons/customnames-blizzardnameplates",
     },
 
     -- plugins for other addons

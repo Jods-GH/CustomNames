@@ -31,11 +31,13 @@ Open a pull request that adds an entry to `Data/Plugins.lua`:
     title = "MyAddon",               -- shown in the list
     description = "Shows custom names in MyAddon.", -- one or two sentences in English
     requires = { "MyAddon" },        -- addons the plugin is for, leave it out for plugins of the default UI
+    replacedBy = "unitFrames",       -- optional: hidden while an addon of that group in private.AddonGroups is enabled
     url = "https://www.curseforge.com/wow/addons/myaddon-customnames", -- download address of the plugin
 },
 -- or, if your addon uses CustomNames without a plugin:
 { addon = "MyAddon", title = "MyAddon", builtIn = true, description = "Shows custom names in MyAddon." },
 ```
+If your addon replaces Blizzard's unit frames or nameplates, add its folder name to `unitFrames` or `nameplates` in `private.AddonGroups` (same file), so the plugins for Blizzard's frames aren't suggested to your users.
 # Usage 
 ```lua
 local Lib = LibStub("CustomNames")

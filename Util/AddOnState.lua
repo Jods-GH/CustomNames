@@ -32,6 +32,14 @@ end
 ---@param entry table -- of private.Plugins
 ---@return boolean -- the entry concerns the addons the player uses
 local function IsRelevant(entry)
+    -- frames that another addon replaced don't need the plugin, unless it is loaded anyway
+    if entry.replacedBy and private.GetAddOnState(entry.addon) ~= STATE_LOADED then
+        for _, name in ipairs(private.AddonGroups[entry.replacedBy]) do
+            if IsAddOnUsed(name) then
+                return false
+            end
+        end
+    end
     if entry.builtIn then
         return IsAddOnUsed(entry.addon)
     end
